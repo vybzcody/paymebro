@@ -21,10 +21,10 @@ export const DashboardHeader = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#" className="text-foreground hover:text-primary transition-colors">Dashboard</a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Payments</a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Invoices</a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Analytics</a>
+            <a href="/" className="text-foreground hover:text-primary transition-colors">Dashboard</a>
+            <a href="/payments" className="text-muted-foreground hover:text-primary transition-colors">Payments</a>
+            <a href="/invoices" className="text-muted-foreground hover:text-primary transition-colors">Invoices</a>
+            <a href="/analytics" className="text-muted-foreground hover:text-primary transition-colors">Analytics</a>
           </nav>
 
           {/* Actions */}

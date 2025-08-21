@@ -32,6 +32,73 @@ export const QRGenerator = () => {
     });
   };
 
+  const downloadQR = () => {
+    if (!amount) {
+      toast({
+        title: "Generate QR First",
+        description: "Please generate a QR code before downloading",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create a mock download
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      // Create a simple QR code-like pattern
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 256, 256);
+      
+      ctx.fillStyle = '#000000';
+      // Draw QR code pattern
+      for (let i = 0; i < 256; i += 8) {
+        for (let j = 0; j < 256; j += 8) {
+          if (Math.random() > 0.5) {
+            ctx.fillRect(i, j, 8, 8);
+          }
+        }
+      }
+      
+      // Add corner squares
+      ctx.fillRect(0, 0, 64, 64);
+      ctx.fillRect(192, 0, 64, 64);
+      ctx.fillRect(0, 192, 64, 64);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(8, 8, 48, 48);
+      ctx.fillRect(200, 8, 48, 48);
+      ctx.fillRect(8, 200, 48, 48);
+      
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(16, 16, 32, 32);
+      ctx.fillRect(208, 16, 32, 32);
+      ctx.fillRect(16, 208, 32, 32);
+    }
+    
+    // Convert to blob and download
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `afripay-qr-${amount}-usdc.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "QR Code Downloaded",
+          description: `QR code for $${amount} USDC saved to your device`,
+        });
+      }
+    }, 'image/png');
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -71,7 +138,7 @@ export const QRGenerator = () => {
           <p className="text-sm text-muted-foreground mb-3">
             Scan to pay ${amount} USDC
           </p>
-          <Button variant="outline" size="sm" className="w-full">
+          <Button variant="outline" size="sm" className="w-full" onClick={downloadQR}>
             <Download className="w-4 h-4 mr-2" />
             Download QR
           </Button>
