@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Layout } from "@/components/Layout";
 import { CreateInvoiceModal } from "@/components/CreateInvoiceModal";
 import { ExportModal } from "@/components/ExportModal";
 import { Plus, Send, Eye, Edit, Trash2, Download, Search, Filter } from "lucide-react";
@@ -109,7 +108,7 @@ const Invoices = () => {
   };
 
   return (
-    <Layout>
+    <div>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 opacity-0 animate-fade-in-down">
@@ -236,8 +235,8 @@ const Invoices = () => {
                   </thead>
                   <tbody>
                     {invoices.map((invoice, index) => (
-                      <tr 
-                        key={invoice.id} 
+                      <tr
+                        key={invoice.id}
                         className={`border-b hover:bg-muted/50 transition-all duration-200 opacity-0 animate-fade-in-up`}
                         style={{ animationDelay: `${400 + index * 100}ms` }}
                       >
@@ -329,7 +328,7 @@ const Invoices = () => {
         data={exportData}
         type="invoices"
       />
-    </Layout>
+    </div>
   );
 };
 
