@@ -8,12 +8,12 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Layout } from "@/components/Layout";
-import { 
-  User, 
-  Building, 
-  Shield, 
-  Bell, 
-  Globe, 
+import {
+  User,
+  Building,
+  Shield,
+  Bell,
+  Globe,
   Camera,
   Edit,
   Save,
@@ -37,7 +37,7 @@ const Profile = () => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
-  
+
   const [profileData, setProfileData] = useState({
     firstName: "John",
     lastName: "Doe",
@@ -103,7 +103,7 @@ const Profile = () => {
   ];
 
   return (
-    <Layout>
+    <div>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 opacity-0 animate-fade-in-down">
@@ -145,8 +145,8 @@ const Profile = () => {
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
                       onClick={handleAvatarUpload}
                     >
@@ -192,11 +192,10 @@ const Profile = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all duration-200 border-b-2 whitespace-nowrap ${
-                      activeTab === tab.id
+                    className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === tab.id
                         ? 'border-primary text-primary bg-primary/5'
                         : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                    }`}
+                      }`}
                   >
                     {tab.icon}
                     {tab.label}
@@ -238,7 +237,7 @@ const Profile = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
@@ -284,7 +283,7 @@ const Profile = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="timezone">Timezone</Label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                       value={profileData.timezone}
                       onChange={(e) => setProfileData(prev => ({ ...prev, timezone: e.target.value }))}
@@ -298,7 +297,7 @@ const Profile = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="language">Language</Label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                       value={profileData.language}
                       onChange={(e) => setProfileData(prev => ({ ...prev, language: e.target.value }))}
@@ -336,7 +335,7 @@ const Profile = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="businessType">Business Type</Label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                       value={businessData.businessType}
                       onChange={(e) => setBusinessData(prev => ({ ...prev, businessType: e.target.value }))}
@@ -469,7 +468,7 @@ const Profile = () => {
 
                   <div className="space-y-2">
                     <Label>Session Timeout (minutes)</Label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       value={preferences.sessionTimeout}
                       onChange={(e) => setPreferences(prev => ({ ...prev, sessionTimeout: parseInt(e.target.value) }))}
@@ -544,7 +543,7 @@ const Profile = () => {
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <h3 className="font-semibold">Notification Settings</h3>
-                  
+
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <Mail className="w-4 h-4 text-muted-foreground" />
@@ -606,7 +605,7 @@ const Profile = () => {
 
                 <div className="space-y-4">
                   <h3 className="font-semibold">Display Preferences</h3>
-                  
+
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-3">
                       {preferences.darkMode ? <Moon className="w-4 h-4 text-muted-foreground" /> : <Sun className="w-4 h-4 text-muted-foreground" />}
@@ -630,7 +629,7 @@ const Profile = () => {
           )}
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

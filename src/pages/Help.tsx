@@ -92,7 +92,7 @@ const Help = () => {
   ];
 
   return (
-    <Layout>
+    <div>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="text-center space-y-2 opacity-0 animate-fade-in-down">
@@ -294,7 +294,7 @@ const Help = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

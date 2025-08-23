@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Layout } from "@/components/Layout";
 import { TransactionModal } from "@/components/TransactionModal";
 import { ExportModal } from "@/components/ExportModal";
 import { Search, Filter, Download, Eye, MoreHorizontal } from "lucide-react";
@@ -152,7 +151,7 @@ const Payments = () => {
   };
 
   return (
-    <Layout>
+    <div>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 opacity-0 animate-fade-in-down">
@@ -282,8 +281,8 @@ const Payments = () => {
                   </thead>
                   <tbody>
                     {payments.map((payment, index) => (
-                      <tr 
-                        key={payment.id} 
+                      <tr
+                        key={payment.id}
                         className={`border-b hover:bg-muted/50 transition-all duration-200 cursor-pointer opacity-0 animate-fade-in-up`}
                         style={{ animationDelay: `${400 + index * 100}ms` }}
                       >
@@ -313,8 +312,8 @@ const Payments = () => {
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               onClick={() => handleViewTransaction(payment)}
                               className="btn-press"
@@ -348,7 +347,7 @@ const Payments = () => {
         data={exportData}
         type="payments"
       />
-    </Layout>
+    </div>
   );
 };
 
