@@ -3,12 +3,10 @@ import { Button } from "@/components/ui/button";
 import { QrCode, Send, CreditCard, TrendingUp, Users, DollarSign } from "lucide-react";
 import { StatCard } from "./StatCard";
 import { QRGenerator } from "./QRGenerator";
-import { Layout } from "./Layout";
 
 export const Dashboard = () => {
   return (
-    <Layout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="opacity-0 animate-fade-in-up">
@@ -131,6 +129,5 @@ export const Dashboard = () => {
           </Card>
         </div>
       </div>
-    </Layout>
   );
 };

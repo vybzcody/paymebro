@@ -27,7 +27,7 @@ export const useAuth = () => {
   useEffect(() => {
     if (web3User && publicKey) {
       setUser({
-        id: web3User.id || publicKey.toString(),
+        id: web3User.verifierId || web3User.id || publicKey.toString(),
         email: web3User.email,
         name: web3User.name,
         profileImage: web3User.profileImage,
@@ -37,7 +37,7 @@ export const useAuth = () => {
     } else {
       setUser(null);
     }
-  }, [web3User?.id, web3User?.email, publicKey?.toString()]);
+  }, [web3User, publicKey]);
 
   // Sync errors
   useEffect(() => {
@@ -74,7 +74,7 @@ export const useAuth = () => {
     error,
     login,
     logout,
-    isAuthenticated: !!user,
+    isAuthenticated: !!(web3User && publicKey), // Use Web3Auth state directly
     walletAddress: publicKey?.toString() || null,
   };
 };
