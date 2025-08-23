@@ -40,12 +40,15 @@ const Landing = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Redirect after successful login (but not during the login process)
-  // useEffect(() => {
-  //   if (isAuthenticated && !isLoggingIn && isInitialized) {
-  //     console.log('User is authenticated, redirecting to dashboard...');
-  //     navigate('/dashboard');
-  //   }
-  // }, [isAuthenticated, isLoggingIn, isInitialized, navigate]);
+  useEffect(() => {
+    if (isAuthenticated && !isLoggingIn && isInitialized) {
+      console.log('User is authenticated, redirecting to dashboard...');
+      // Small delay to let the success toast show
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+    }
+  }, [isAuthenticated, isLoggingIn, isInitialized, navigate]);
 
   const handleGetStarted = async () => {
     if (isAuthenticated) {
@@ -62,10 +65,7 @@ const Landing = () => {
         description: "Successfully connected your wallet. Redirecting to dashboard...",
       });
 
-      // Navigate to dashboard after successful login
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
+      // The useEffect will handle the redirect automatically
     } catch (err: any) {
       console.error('Login error:', err);
       toast({
