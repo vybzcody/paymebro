@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Layout } from "@/components/Layout";
 import { ExportModal } from "@/components/ExportModal";
 import { TrendingUp, TrendingDown, Users, CreditCard, Calendar, Download } from "lucide-react";
 import { useState } from "react";
@@ -60,7 +59,7 @@ const Analytics = () => {
   };
 
   return (
-    <Layout>
+    <div>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 opacity-0 animate-fade-in-down">
@@ -248,7 +247,7 @@ const Analytics = () => {
         data={exportData}
         type="analytics"
       />
-    </Layout>
+    </div>
   );
 };
 

@@ -6,14 +6,14 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Layout } from "@/components/Layout";
-import { 
-  User, 
-  Wallet, 
-  Bell, 
-  Shield, 
-  Globe, 
-  Smartphone, 
-  Mail, 
+import {
+  User,
+  Wallet,
+  Bell,
+  Shield,
+  Globe,
+  Smartphone,
+  Mail,
   Key,
   Copy,
   Eye,
@@ -55,7 +55,7 @@ const Settings = () => {
   };
 
   return (
-    <Layout>
+    <div>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="opacity-0 animate-fade-in-down">
@@ -115,9 +115,9 @@ const Settings = () => {
                   <div className="space-y-2">
                     <Label>Primary Wallet Address</Label>
                     <div className="flex items-center space-x-2">
-                      <Input 
-                        value="7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU" 
-                        readOnly 
+                      <Input
+                        value="7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+                        readOnly
                         className="font-mono text-sm"
                       />
                       <Button variant="outline" size="sm" className="btn-press">
@@ -156,14 +156,14 @@ const Settings = () => {
                   <div className="space-y-2">
                     <Label>API Key</Label>
                     <div className="flex items-center space-x-2">
-                      <Input 
+                      <Input
                         type={showApiKey ? "text" : "password"}
                         value="afp_live_sk_1234567890abcdef"
-                        readOnly 
+                        readOnly
                         className="font-mono"
                       />
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => setShowApiKey(!showApiKey)}
                         className="btn-press"
@@ -239,9 +239,9 @@ const Settings = () => {
                       <Mail className="w-4 h-4" />
                       <span className="text-sm">Email notifications</span>
                     </div>
-                    <Switch 
+                    <Switch
                       checked={notifications.email}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         setNotifications(prev => ({ ...prev, email: checked }))
                       }
                     />
@@ -251,9 +251,9 @@ const Settings = () => {
                       <Smartphone className="w-4 h-4" />
                       <span className="text-sm">SMS notifications</span>
                     </div>
-                    <Switch 
+                    <Switch
                       checked={notifications.sms}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         setNotifications(prev => ({ ...prev, sms: checked }))
                       }
                     />
@@ -263,9 +263,9 @@ const Settings = () => {
                       <Bell className="w-4 h-4" />
                       <span className="text-sm">Push notifications</span>
                     </div>
-                    <Switch 
+                    <Switch
                       checked={notifications.push}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         setNotifications(prev => ({ ...prev, push: checked }))
                       }
                     />
@@ -275,9 +275,9 @@ const Settings = () => {
                       <Globe className="w-4 h-4" />
                       <span className="text-sm">Marketing emails</span>
                     </div>
-                    <Switch 
+                    <Switch
                       checked={notifications.marketing}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         setNotifications(prev => ({ ...prev, marketing: checked }))
                       }
                     />
@@ -314,7 +314,7 @@ const Settings = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

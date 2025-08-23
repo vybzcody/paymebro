@@ -2,12 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Layout } from "@/components/Layout";
 import { SubscriptionModal } from "@/components/SubscriptionModal";
-import { 
-  CreditCard, 
-  TrendingUp, 
-  Calendar, 
+import {
+  CreditCard,
+  TrendingUp,
+  Calendar,
   Download,
   Check,
   X,
@@ -146,7 +145,7 @@ const Billing = () => {
   const usagePercentage = currentPlanData ? (currentUsage.transactions / currentPlanData.monthlyLimit) * 100 : 0;
 
   return (
-    <Layout>
+    <div>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 opacity-0 animate-fade-in-down">
@@ -252,8 +251,8 @@ const Billing = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {billingHistory.map((invoice, index) => (
-                      <div 
-                        key={invoice.id} 
+                      <div
+                        key={invoice.id}
                         className={`flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-all duration-200 opacity-0 animate-fade-in-up`}
                         style={{ animationDelay: `${400 + index * 100}ms` }}
                       >
@@ -268,9 +267,9 @@ const Billing = () => {
                               {invoice.status}
                             </Badge>
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleDownloadInvoice(invoice.id)}
                             className="btn-press"
                           >
@@ -295,13 +294,12 @@ const Billing = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {plans.slice(0, 3).map((plan) => (
-                    <div 
+                    <div
                       key={plan.id}
-                      className={`p-3 border rounded-lg transition-all duration-200 ${
-                        plan.id === currentPlan 
-                          ? 'border-primary bg-primary/5' 
-                          : 'hover:border-primary/50 cursor-pointer'
-                      }`}
+                      className={`p-3 border rounded-lg transition-all duration-200 ${plan.id === currentPlan
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50 cursor-pointer'
+                        }`}
                       onClick={() => plan.id !== currentPlan && handleUpgrade()}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -332,7 +330,7 @@ const Billing = () => {
                       )}
                     </div>
                   ))}
-                  
+
                   <Button onClick={handleUpgrade} className="w-full btn-press">
                     View All Plans
                   </Button>
@@ -370,7 +368,7 @@ const Billing = () => {
         currentPlan={currentPlan}
         onPlanChange={handlePlanChange}
       />
-    </Layout>
+    </div>
   );
 };
 

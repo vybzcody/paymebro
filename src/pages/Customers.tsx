@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Layout } from "@/components/Layout";
 import {
   Search,
   Filter,
@@ -141,8 +140,7 @@ const Customers = () => {
   };
 
   return (
-    <Layout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 opacity-0 animate-fade-in-down">
           <div>
@@ -344,8 +342,7 @@ const Customers = () => {
             </CardContent>
           </Card>
         )}
-      </div>
-    </Layout>
+    </div>
   );
 };
 

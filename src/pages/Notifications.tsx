@@ -4,11 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Layout } from "@/components/Layout";
-import { 
-  Bell, 
-  Check, 
-  X, 
-  Filter, 
+import {
+  Bell,
+  Check,
+  X,
+  Filter,
   Search,
   Settings,
   Trash2,
@@ -139,9 +139,9 @@ const Notifications = () => {
   });
 
   const getNotificationIcon = (type: string, priority: string) => {
-    const iconClass = priority === 'urgent' ? 'text-destructive' : 
-                     priority === 'high' ? 'text-accent' : 
-                     priority === 'medium' ? 'text-primary' : 'text-muted-foreground';
+    const iconClass = priority === 'urgent' ? 'text-destructive' :
+      priority === 'high' ? 'text-accent' :
+        priority === 'medium' ? 'text-primary' : 'text-muted-foreground';
 
     switch (type) {
       case 'payment':
@@ -170,21 +170,21 @@ const Notifications = () => {
   };
 
   const filteredNotifications = notifications.filter(notification => {
-    const matchesFilter = filter === 'all' || 
-                         (filter === 'unread' && !notification.read) ||
-                         notification.type === filter;
-    
-    const matchesSearch = searchTerm === '' || 
-                         notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notification.message.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesFilter = filter === 'all' ||
+      (filter === 'unread' && !notification.read) ||
+      notification.type === filter;
+
+    const matchesSearch = searchTerm === '' ||
+      notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      notification.message.toLowerCase().includes(searchTerm.toLowerCase());
+
     return matchesFilter && matchesSearch;
   });
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleMarkAsRead = (id: string) => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(n => n.id === id ? { ...n, read: true } : n)
     );
   };
@@ -207,7 +207,7 @@ const Notifications = () => {
 
   const handleBulkAction = (action: 'read' | 'delete') => {
     if (action === 'read') {
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(n => selectedNotifications.includes(n.id) ? { ...n, read: true } : n)
       );
       toast({
@@ -215,7 +215,7 @@ const Notifications = () => {
         description: `${selectedNotifications.length} notifications marked as read`,
       });
     } else if (action === 'delete') {
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.filter(n => !selectedNotifications.includes(n.id))
       );
       toast({
@@ -227,7 +227,7 @@ const Notifications = () => {
   };
 
   const toggleNotificationSelection = (id: string) => {
-    setSelectedNotifications(prev => 
+    setSelectedNotifications(prev =>
       prev.includes(id) ? prev.filter(nId => nId !== id) : [...prev, id]
     );
   };
@@ -240,7 +240,7 @@ const Notifications = () => {
   };
 
   return (
-    <Layout>
+    <div>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 opacity-0 animate-fade-in-down">
@@ -294,7 +294,7 @@ const Notifications = () => {
                       />
                     </div>
                     <div className="flex gap-2">
-                      <select 
+                      <select
                         className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
                         value={filter}
                         onChange={(e) => setFilter(e.target.value as any)}
@@ -325,11 +325,10 @@ const Notifications = () => {
                 </Card>
               ) : (
                 filteredNotifications.map((notification, index) => (
-                  <Card 
-                    key={notification.id} 
-                    className={`card-hover transition-all duration-200 opacity-0 animate-fade-in-up ${
-                      !notification.read ? 'border-l-4 border-l-primary bg-primary/5' : ''
-                    }`}
+                  <Card
+                    key={notification.id}
+                    className={`card-hover transition-all duration-200 opacity-0 animate-fade-in-up ${!notification.read ? 'border-l-4 border-l-primary bg-primary/5' : ''
+                      }`}
                     style={{ animationDelay: `${300 + index * 50}ms` }}
                   >
                     <CardContent className="p-4">
@@ -340,7 +339,7 @@ const Notifications = () => {
                           onChange={() => toggleNotificationSelection(notification.id)}
                           className="mt-1"
                         />
-                        
+
                         <div className="p-2 bg-muted/50 rounded-lg">
                           {getNotificationIcon(notification.type, notification.priority)}
                         </div>
@@ -377,9 +376,9 @@ const Notifications = () => {
 
                           <div className="flex items-center gap-2 pt-2">
                             {!notification.read && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => handleMarkAsRead(notification.id)}
                                 className="btn-press"
                               >
@@ -387,9 +386,9 @@ const Notifications = () => {
                                 Mark as read
                               </Button>
                             )}
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleDeleteNotification(notification.id)}
                               className="btn-press text-destructive hover:text-destructive"
                             >
@@ -455,7 +454,7 @@ const Notifications = () => {
                     </div>
                     <Switch
                       checked={notificationSettings.emailNotifications}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         setNotificationSettings(prev => ({ ...prev, emailNotifications: checked }))
                       }
                     />
@@ -468,7 +467,7 @@ const Notifications = () => {
                     </div>
                     <Switch
                       checked={notificationSettings.pushNotifications}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         setNotificationSettings(prev => ({ ...prev, pushNotifications: checked }))
                       }
                     />
@@ -481,7 +480,7 @@ const Notifications = () => {
                     </div>
                     <Switch
                       checked={notificationSettings.smsNotifications}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         setNotificationSettings(prev => ({ ...prev, smsNotifications: checked }))
                       }
                     />
@@ -491,12 +490,12 @@ const Notifications = () => {
 
                   <div className="space-y-3">
                     <h4 className="font-medium text-sm">Categories</h4>
-                    
+
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Payment Alerts</span>
                       <Switch
                         checked={notificationSettings.paymentAlerts}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           setNotificationSettings(prev => ({ ...prev, paymentAlerts: checked }))
                         }
                       />
@@ -506,7 +505,7 @@ const Notifications = () => {
                       <span className="text-sm">Security Alerts</span>
                       <Switch
                         checked={notificationSettings.securityAlerts}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           setNotificationSettings(prev => ({ ...prev, securityAlerts: checked }))
                         }
                       />
@@ -516,7 +515,7 @@ const Notifications = () => {
                       <span className="text-sm">System Updates</span>
                       <Switch
                         checked={notificationSettings.systemUpdates}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           setNotificationSettings(prev => ({ ...prev, systemUpdates: checked }))
                         }
                       />
@@ -526,7 +525,7 @@ const Notifications = () => {
                       <span className="text-sm">Marketing</span>
                       <Switch
                         checked={notificationSettings.marketingEmails}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           setNotificationSettings(prev => ({ ...prev, marketingEmails: checked }))
                         }
                       />
@@ -565,7 +564,7 @@ const Notifications = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 
