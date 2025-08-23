@@ -12,18 +12,18 @@ export const StatCard = ({ title, value, icon, trend }: StatCardProps) => {
   const isPositive = trend.startsWith('+');
   
   return (
-    <Card className="shadow-lg border-0 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-card/95">
+    <Card className="shadow-lg border-0 card-hover bg-gradient-to-br from-card to-card/95">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary transition-all duration-300 hover:bg-primary/20">
               {icon}
             </div>
           </div>
-          <div className={`text-xs font-medium px-2 py-1 rounded-full ${
+          <div className={`text-xs font-medium px-2 py-1 rounded-full transition-all duration-300 ${
             isPositive 
-              ? 'bg-primary/10 text-primary' 
-              : 'bg-destructive/10 text-destructive'
+              ? 'bg-primary/10 text-primary hover:bg-primary/20' 
+              : 'bg-destructive/10 text-destructive hover:bg-destructive/20'
           }`}>
             {trend}
           </div>
