@@ -6,12 +6,24 @@ import { SECURITY_CONFIG } from '../config/index.js';
 // CORS Configuration
 export const corsMiddleware = cors({
   origin: (origin, callback) => {
+    // In development, be more permissive
+    if (process.env.NODE_ENV === 'development') {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return callback(null, true);
+      
+      // Allow localhost on any port for development
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true);
+      }
+    }
+    
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) return callback(null, true);
     
     if (SECURITY_CONFIG.allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.log(`CORS blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
