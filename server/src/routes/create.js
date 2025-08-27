@@ -16,7 +16,7 @@ const router = express.Router();
 router.post('/',
   [
     body('userId').notEmpty().isLength({ min: 1, max: 255 }).withMessage('User ID is required and must be valid'),
-    body('amount').isFloat({ min: 0.01 }).withMessage('Valid amount is required (minimum 0.01)'),
+    body('amount').isFloat({ min: 0.000001 }).withMessage('Valid amount is required (minimum 0.000001)'),
     body('description').notEmpty().withMessage('Description is required'),
     body('recipientWallet').notEmpty().withMessage('Recipient wallet is required'),
     body('currency').optional().isIn(['USDC', 'SOL']).withMessage('Currency must be USDC or SOL'),
