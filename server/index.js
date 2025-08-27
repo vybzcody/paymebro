@@ -13,6 +13,7 @@ import {
 import paymentRouter from './src/routes/payment.js';
 import createRouter from './src/routes/create.js';
 import healthRouter from './src/routes/health.js';
+import networkRouter from './src/routes/network.js';
 
 // Validate configuration on startup
 try {
@@ -51,6 +52,7 @@ app.use(validateContentType);
 
 // Health check routes (no auth required)
 app.use('/health', healthRouter);
+app.use('/api/network', networkRouter);
 
 // Root endpoint
 app.get('/', (req, res) => {
