@@ -69,22 +69,27 @@ router.post('/',
         });
       }
 
-      // Calculate AfriPay fees
-      const fees = solanaService.calculateAfriPayFees(amount, currency);
+      // Create payment request without fees - direct amount
       const reference = solanaService.generateReference();
 
-      console.log('Fee calculation:', fees);
+      console.log('Creating direct payment without fees:', {
+        userId,
+        amount,
+        description,
+        recipientWallet,
+        currency
+      });
 
-      // Create Solana Pay URL
+      // Create Solana Pay URL with exact amount (no fees)
       const splToken = currency === 'USDC' ? SOLANA_CONFIG.usdcMint : undefined;
       
       const paymentUrl = encodeURL({
         recipient,
-        amount: fees.total, // Customer pays original + fee (already a BigNumber)
+        amount: new BigNumber(amount), // Use exact amount without fees
         splToken,
         reference,
         label: merchantName || 'AfriPay Payment',
-        message: `${description} (includes ${fees.afripayFee.toFixed(currency === 'SOL' ? 4 : 2)} ${currency} AfriPay fee)`,
+        message: description, // Simple message without fee information
         memo: memo || `AfriPay: ${description}`
       });
 
@@ -95,7 +100,7 @@ router.post('/',
       const paymentRequest = await databaseService.createPaymentRequest({
         userId,
         reference: reference.toString(),
-        amount: fees.originalAmount.toNumber(),
+        amount: amount, // Store exact amount
         currency,
         description,
         recipientWallet: recipientWallet,
@@ -105,14 +110,14 @@ router.post('/',
         customerEmail,
         customerName,
         merchantName,
-        afripayFee: fees.afripayFee.toNumber(),
-        originalAmount: fees.originalAmount.toNumber(),
-        totalAmount: fees.total.toNumber()
+        afripayFee: 0, // No fees
+        originalAmount: amount,
+        totalAmount: amount // Total equals original amount
       });
 
       console.log('Payment request created:', paymentRequest.id);
 
-      // Return response with all necessary data
+      // Return response with simplified data
       const response = {
         paymentRequest: {
           id: paymentRequest.id,
@@ -122,16 +127,16 @@ router.post('/',
           expiresAt: paymentRequest.expires_at
         },
         feeBreakdown: {
-          originalAmount: fees.originalAmount.toNumber(),
-          afripayFee: fees.afripayFee.toNumber(),
-          merchantReceives: fees.merchantReceives.toNumber(),
-          total: fees.total.toNumber()
+          originalAmount: amount,
+          afripayFee: 0, // No fees
+          merchantReceives: amount, // Merchant receives full amount
+          total: amount // Customer pays exact amount
         },
         transactionDetails: {
-          originalAmount: fees.originalAmount.toNumber(),
-          afripayFee: fees.afripayFee.toNumber(),
-          totalCustomerPays: fees.total.toNumber(),
-          merchantReceives: fees.merchantReceives.toNumber(),
+          originalAmount: amount,
+          afripayFee: 0,
+          totalCustomerPays: amount,
+          merchantReceives: amount,
           currency
         }
       };

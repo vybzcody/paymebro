@@ -1,12 +1,52 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { QrCode, Send, CreditCard, TrendingUp, Users, DollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { QrCode, Send, CreditCard, TrendingUp, Users, DollarSign, Wallet, Zap, Clock } from "lucide-react";
 import { StatCard } from "./StatCard";
 import { QRGenerator } from "./QRGenerator";
+import { useWeb3Auth } from "@/contexts/Web3AuthContext";
+import { useSolanaPay } from "@/hooks/useSolanaPay";
 
 export const Dashboard = () => {
+  const { user, publicKey } = useWeb3Auth();
+  const { paymentStatus } = useSolanaPay();
+
   return (
     <div className="space-y-6">
+      {/* Welcome Banner with Solana Pay Status */}
+      <div className="opacity-0 animate-fade-in-down">
+        <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">
+                  Welcome back{user?.name ? `, ${user.name}` : ''}! 👋
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Ready to accept payments with Solana Pay
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {publicKey ? (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
+                    <Wallet className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">Wallet Connected</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg">
+                    <Wallet className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Connect Wallet</span>
+                  </div>
+                )}
+                <Badge variant="outline" className="bg-accent/10 text-accent">
+                  <Zap className="w-3 h-3 mr-1" />
+                  Solana Pay Ready
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="opacity-0 animate-fade-in-up">
@@ -19,111 +59,172 @@ export const Dashboard = () => {
           </div>
           <div className="opacity-0 animate-fade-in-up animate-delay-100">
             <StatCard
-              title="Active Customers"
-              value="2,847"
-              icon={<Users className="w-4 h-4" />}
-              trend="+8.2%"
+              title="Solana Payments"
+              value="347"
+              icon={<Zap className="w-4 h-4" />}
+              trend="+24.8%"
             />
           </div>
           <div className="opacity-0 animate-fade-in-up animate-delay-200">
             <StatCard
-              title="Transactions"
-              value="1,239"
-              icon={<CreditCard className="w-4 h-4" />}
+              title="Active QR Codes"
+              value="12"
+              icon={<QrCode className="w-4 h-4" />}
               trend="+15.3%"
             />
           </div>
           <div className="opacity-0 animate-fade-in-up animate-delay-300">
             <StatCard
-              title="Growth Rate"
-              value="23.4%"
-              icon={<TrendingUp className="w-4 h-4" />}
-              trend="+2.1%"
+              title="Avg. Confirmation"
+              value="0.4s"
+              icon={<Clock className="w-4 h-4" />}
+              trend="Solana Speed"
             />
           </div>
         </div>
 
+        {/* Current Payment Status */}
+        {paymentStatus.status !== 'idle' && (
+          <div className="opacity-0 animate-fade-in-up animate-delay-400">
+            <Card className={`border-0 shadow-lg ${
+              paymentStatus.status === 'confirmed' 
+                ? 'bg-gradient-to-r from-green-500/10 to-green-600/5 border-green-500/20' 
+                : paymentStatus.status === 'pending'
+                ? 'bg-gradient-to-r from-yellow-500/10 to-yellow-600/5 border-yellow-500/20'
+                : paymentStatus.status === 'failed'
+                ? 'bg-gradient-to-r from-red-500/10 to-red-600/5 border-red-500/20'
+                : 'bg-gradient-to-r from-blue-500/10 to-blue-600/5 border-blue-500/20'
+            }`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      paymentStatus.status === 'confirmed' ? 'bg-green-500/20' :
+                      paymentStatus.status === 'pending' ? 'bg-yellow-500/20' :
+                      paymentStatus.status === 'failed' ? 'bg-red-500/20' : 'bg-blue-500/20'
+                    }`}>
+                      {paymentStatus.status === 'confirmed' && <QrCode className="w-5 h-5 text-green-600" />}
+                      {paymentStatus.status === 'pending' && <Clock className="w-5 h-5 text-yellow-600 animate-pulse" />}
+                      {paymentStatus.status === 'failed' && <QrCode className="w-5 h-5 text-red-600" />}
+                      {(paymentStatus.status === 'creating' || paymentStatus.status === 'confirming') && <QrCode className="w-5 h-5 text-blue-600" />}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold capitalize">
+                        {paymentStatus.status === 'confirmed' ? 'Payment Received!' :
+                         paymentStatus.status === 'pending' ? 'Waiting for Payment' :
+                         paymentStatus.status === 'failed' ? 'Payment Failed' :
+                         'Processing Payment'}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {paymentStatus.status === 'confirmed' ? 'Transaction confirmed on Solana' :
+                         paymentStatus.status === 'pending' ? 'Customer can scan QR code below' :
+                         paymentStatus.status === 'failed' ? paymentStatus.error || 'Transaction unsuccessful' :
+                         'Creating Solana Pay request...'}
+                      </p>
+                    </div>
+                  </div>
+                  {paymentStatus.signature && (
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {paymentStatus.signature.slice(0, 8)}...{paymentStatus.signature.slice(-8)}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="opacity-0 animate-slide-in-left animate-delay-400">
+        <div className="grid grid-cols-1 gap-6">
+          <div className="opacity-0 animate-slide-in-left animate-delay-500">
             <Card className="shadow-lg border-0 bg-gradient-to-br from-primary/5 to-primary/10 card-hover">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <QrCode className="w-5 h-5 text-primary" />
-                  Generate Payment QR
+                  Generate Solana Pay QR Code
                 </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Create instant payment requests for SOL or USDC that work with any Solana wallet
+                </p>
               </CardHeader>
               <CardContent>
                 <QRGenerator />
               </CardContent>
             </Card>
           </div>
-
-          <div className="opacity-0 animate-slide-in-right animate-delay-400">
-            <Card className="shadow-lg border-0 card-hover">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Send className="w-5 h-5 text-accent" />
-                  Quick Invoice
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Customer Email</label>
-                  <input 
-                    type="email" 
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
-                    placeholder="customer@example.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Amount (USDC)</label>
-                  <input 
-                    type="number" 
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
-                    placeholder="0.00"
-                  />
-                </div>
-                <Button className="w-full bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70 text-accent-foreground btn-press">
-                  Send Invoice
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
-        {/* Recent Transactions */}
-        <div className="opacity-0 animate-fade-in-up animate-delay-500">
+
+        {/* Recent Solana Transactions */}
+        <div className="opacity-0 animate-fade-in-up animate-delay-600">
           <Card className="shadow-lg border-0 card-hover">
             <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-primary" />
+                Recent Solana Pay Transactions
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Lightning-fast payments confirmed on Solana blockchain
+              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {[
-                  { id: "1", customer: "John Doe", amount: "$45.20", status: "Completed", time: "2 min ago" },
-                  { id: "2", customer: "Jane Smith", amount: "$120.00", status: "Pending", time: "5 min ago" },
-                  { id: "3", customer: "Mike Johnson", amount: "$89.50", status: "Completed", time: "12 min ago" },
+                  { id: "1", customer: "Sarah's Coffee Shop", amount: "0.15 SOL", status: "Confirmed", time: "0.4s ago", signature: "3wJfK...8xPq" },
+                  { id: "2", customer: "Mike's Electronics", amount: "1.25 SOL", status: "Confirmed", time: "2 min ago", signature: "5kLm9...7yTr" },
+                  { id: "3", customer: "Local Market", amount: "0.85 SOL", status: "Confirmed", time: "5 min ago", signature: "8nPx4...2wQs" },
+                  { id: "4", customer: "Delivery Service", amount: "0.08 SOL", status: "Pending", time: "Just now", signature: null },
                 ].map((transaction, index) => (
                   <div 
                     key={transaction.id} 
-                    className={`flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-all duration-200 cursor-pointer opacity-0 animate-fade-in-up`}
-                    style={{ animationDelay: `${600 + index * 100}ms` }}
+                    className={`flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer opacity-0 animate-fade-in-up border border-muted/50`}
+                    style={{ animationDelay: `${700 + index * 100}ms` }}
                   >
-                    <div>
-                      <p className="font-medium">{transaction.customer}</p>
-                      <p className="text-sm text-muted-foreground">{transaction.time}</p>
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        transaction.status === 'Confirmed' ? 'bg-primary/20' : 'bg-yellow-500/20'
+                      }`}>
+                        {transaction.status === 'Confirmed' ? (
+                          <Zap className="w-4 h-4 text-primary" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-yellow-600 animate-pulse" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium">{transaction.customer}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>{transaction.time}</span>
+                          {transaction.signature && (
+                            <>
+                              <span>•</span>
+                              <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                                {transaction.signature}
+                              </code>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">{transaction.amount}</p>
-                      <p className={`text-sm ${
-                        transaction.status === 'Completed' ? 'text-primary' : 'text-accent'
-                      }`}>
-                        {transaction.status}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={transaction.status === 'Confirmed' ? 'default' : 'secondary'}
+                          className={transaction.status === 'Confirmed' ? 'bg-primary/10 text-primary' : 'bg-yellow-500/10 text-yellow-600'}
+                        >
+                          {transaction.status}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-2 text-sm">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <span className="font-medium text-primary">Powered by Solana:</span>
+                  <span className="text-muted-foreground">Average confirmation time: 0.4 seconds</span>
+                </div>
               </div>
             </CardContent>
           </Card>

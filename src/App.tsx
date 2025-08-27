@@ -5,24 +5,26 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Web3AuthProvider } from './contexts/Web3AuthContext';
 import { useAuth } from './hooks/useAuth';
+import { Suspense, lazy } from 'react';
 
-// Pages
-import Landing from "./pages/Landing";
-import Index from "./pages/Index";
-import Payments from "./pages/Payments";
-import Invoices from "./pages/Invoices";
-import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
-import Help from "./pages/Help";
-import Customers from "./pages/Customers";
-import Profile from "./pages/Profile";
-import Notifications from "./pages/Notifications";
-import Billing from "./pages/Billing";
-import NotFound from "./pages/NotFound";
+// Lazy load pages for better performance
+const Landing = lazy(() => import("./pages/Landing"));
+const Index = lazy(() => import("./pages/Index"));
+const Payments = lazy(() => import("./pages/Payments"));
+const Invoices = lazy(() => import("./pages/Invoices"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Help = lazy(() => import("./pages/Help"));
+const Customers = lazy(() => import("./pages/Customers"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Billing = lazy(() => import("./pages/Billing"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Components
 import { Layout } from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
+import { BackendTestComponent } from './components/BackendTestComponent';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,7 +53,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // App Routes Component (needs to be inside Web3AuthProvider)
 const AppRoutes = () => {
   return (
-    <Routes>
+    <Suspense fallback={<LoadingSpinner text="Loading..." />}>
+      <Routes>
       {/* Public Routes - Landing page is now default */}
       <Route path="/" element={<Landing />} />
 
@@ -116,9 +119,17 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
 
+      {/* Backend Test Route - Development Only */}
+      <Route path="/test-backend" element={
+        <ProtectedRoute>
+          <BackendTestComponent />
+        </ProtectedRoute>
+      } />
+
       {/* 404 Page */}
       <Route path="*" element={<NotFound />} />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 };
 
