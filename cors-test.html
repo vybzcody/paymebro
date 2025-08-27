@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Test for AfriPay</title>
+</head>
+<body>
+    <h1>AfriPay CORS Test</h1>
+    <button onclick="testCORS()">Test CORS Request</button>
+    <div id="result"></div>
+
+    <script>
+        async function testCORS() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing CORS...';
+
+            try {
+                const response = await fetch('http://localhost:3001/api/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: 'cors-test-user',
+                        amount: 1,
+                        description: 'CORS test from browser',
+                        recipientWallet: '9CPhDgxQGHAvtHpaVjbemhPVXtN6ginqhAVyeocBN8z',
+                        currency: 'SOL'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <h3>✅ CORS Test Successful!</h3>
+                        <p>Status: ${response.status}</p>
+                        <p>Payment ID: ${data.paymentRequest.id}</p>
+                        <p>Amount: ${data.feeBreakdown.total} SOL</p>
+                        <p>Fee: ${data.feeBreakdown.afripayFee} SOL</p>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <h3>❌ CORS Test Failed</h3>
+                        <p>Status: ${response.status}</p>
+                        <p>Error: ${errorText}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ CORS Test Error</h3>
+                    <p>Error: ${error.message}</p>
+                    <p>This might be a CORS issue if you see "Failed to fetch" or similar network errors.</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
