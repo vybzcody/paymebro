@@ -331,20 +331,16 @@ export const QRGenerator = () => {
                   <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
                     <h4 className="font-semibold mb-2 flex items-center gap-2 text-primary">
                       <Wallet className="w-4 h-4" />
-                      Payment Breakdown (Stripe-like Model)
+                      Payment Details
                     </h4>
                     <div className="text-sm space-y-1 text-left">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Your requested amount:</span>
+                        <span className="text-muted-foreground">Amount:</span>
                         <span className="font-mono">{paymentState.feeBreakdown.originalAmount.toFixed(4)} {formData.currency}</span>
-                      </div>
-                      <div className="flex justify-between text-amber-600">
-                        <span>AfriPay fee (2.9% + fixed):</span>
-                        <span className="font-mono">+ {paymentState.feeBreakdown.afripayFee.toFixed(4)} {formData.currency}</span>
                       </div>
                       <div className="border-t pt-1 mt-2">
                         <div className="flex justify-between font-semibold">
-                          <span>Customer pays total:</span>
+                          <span>Customer pays:</span>
                           <span className="font-mono">{paymentState.feeBreakdown.total.toFixed(4)} {formData.currency}</span>
                         </div>
                         <div className="flex justify-between text-green-600 text-xs mt-1">
@@ -355,6 +351,9 @@ export const QRGenerator = () => {
                       <div className="flex justify-between text-xs text-muted-foreground mt-2">
                         <span>Network:</span>
                         <span>Solana {import.meta.env.VITE_SOLANA_NETWORK || 'devnet'}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-2">
+                        Direct payment - no additional fees
                       </div>
                     </div>
                   </div>
