@@ -5,7 +5,7 @@ import { encodeURL } from '@solana/pay';
 import BigNumber from 'bignumber.js';
 import { solanaService } from '../services/solana.js';
 import { databaseService } from '../services/database.js';
-import { SOLANA_CONFIG } from '../config/index.js';
+import { SOLANA_CONFIG, AFRIPAY_CONFIG } from '../config/index.js';
 
 const router = express.Router();
 
@@ -91,38 +91,64 @@ router.post('/',
         });
       }
 
-      // Create payment request without fees - direct amount
+      // Calculate AfriPay fees for SaaS monetization
       const reference = solanaService.generateReference();
+      
+      const percentageFee = amount * AFRIPAY_CONFIG.feeRate; // 2.9% of transaction
+      const fixedFeeInCurrency = currency === 'SOL' ? 
+        AFRIPAY_CONFIG.fixedFeeUSD / 100 : // Approximate SOL equivalent (rough conversion)
+        AFRIPAY_CONFIG.fixedFeeUSD; // $0.30 in USDC
+      
+      const totalAfriPayFee = percentageFee + fixedFeeInCurrency;
+      const totalAmount = amount + totalAfriPayFee;
+      const merchantReceives = amount; // Merchant gets the requested amount
 
-      console.log('Creating direct payment without fees:', {
+      console.log('Creating payment with AfriPay fees:', {
         userId,
-        amount,
+        originalAmount: amount,
+        percentageFee: percentageFee.toFixed(6),
+        fixedFee: fixedFeeInCurrency.toFixed(6),
+        totalAfriPayFee: totalAfriPayFee.toFixed(6),
+        totalAmount: totalAmount.toFixed(6),
+        merchantReceives: merchantReceives.toFixed(6),
         description,
         recipientWallet,
         currency
       });
 
-      // Create Solana Pay URL with exact amount (no fees)
+      // Create Solana Pay URL with total amount (customer pays fees)
       const splToken = currency === 'USDC' ? SOLANA_CONFIG.usdcMint : undefined;
       
       const paymentUrl = encodeURL({
         recipient,
-        amount: new BigNumber(amount), // Use exact amount without fees
+        amount: new BigNumber(totalAmount), // Customer pays total including fees
         splToken,
         reference,
         label: merchantName || 'AfriPay Payment',
-        message: description, // Simple message without fee information
+        message: `${description} (includes ${(AFRIPAY_CONFIG.feeRate * 100).toFixed(1)}% + $${AFRIPAY_CONFIG.fixedFeeUSD} AfriPay fee)`,
         memo: memo || `AfriPay: ${description}`
       });
 
       // Generate QR code URL
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(paymentUrl.toString())}`;
 
-      // Store payment request in database
+      // Store payment request in database with fee breakdown
       const paymentRequest = await databaseService.createPaymentRequest({
         userId,
         reference: reference.toString(),
-        amount: amount, // Store exact amount
+        amount: totalAmount, // Store total amount customer pays
+        currency: currency,
+        description: description,
+        recipientWallet: recipientWallet,
+        paymentUrl: paymentUrl.toString(),
+        qrCodeUrl,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+        customerEmail,
+        customerName,
+        merchantName,
+        afripayFee: totalAfriPayFee, // Store AfriPay fee
+        originalAmount: amount, // Store original requested amount
+        totalAmount: totalAmount, // Store total amount including fees
         currency,
         description,
         recipientWallet: recipientWallet,
@@ -149,16 +175,18 @@ router.post('/',
           expiresAt: paymentRequest.expires_at
         },
         feeBreakdown: {
-          originalAmount: amount,
-          afripayFee: 0, // No fees
-          merchantReceives: amount, // Merchant receives full amount
-          total: amount // Customer pays exact amount
+          originalAmount: amount, // What merchant requested
+          afripayFee: totalAfriPayFee, // AfriPay service fee
+          merchantReceives: merchantReceives, // What merchant actually receives
+          total: totalAmount // What customer pays (original + fees)
         },
         transactionDetails: {
           originalAmount: amount,
-          afripayFee: 0,
-          totalCustomerPays: amount,
-          merchantReceives: amount,
+          afripayFee: totalAfriPayFee,
+          totalCustomerPays: totalAmount,
+          merchantReceives: merchantReceives,
+          feePercentage: (AFRIPAY_CONFIG.feeRate * 100).toFixed(1) + '%',
+          fixedFee: fixedFeeInCurrency,
           currency
         }
       };
