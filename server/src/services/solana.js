@@ -25,6 +25,33 @@ export class SolanaService {
     } = params;
 
     try {
+      console.log('Creating payment transaction with params:', {
+        account: account.toString(),
+        recipient: recipient.toString(),
+        amount: amount.toString(),
+        splToken: splToken?.toString(),
+        reference: reference.toString(),
+        memo
+      });
+
+      // Check if account exists and has sufficient balance
+      try {
+        const accountInfo = await this.connection.getAccountInfo(account);
+        if (!accountInfo) {
+          throw new Error('Sender account not found on the network');
+        }
+        
+        const balance = await this.connection.getBalance(account);
+        console.log(`Account balance: ${balance / 1e9} SOL`);
+        
+        if (balance < 5000) { // 0.000005 SOL minimum for transaction fees
+          throw new Error('Insufficient SOL balance for transaction fees');
+        }
+      } catch (balanceError) {
+        console.error('Account validation error:', balanceError);
+        throw new Error(`Account validation failed: ${balanceError.message}`);
+      }
+
       // Create the transfer transaction using Solana Pay
       let transaction = await createTransfer(this.connection, account, {
         recipient,
@@ -42,10 +69,21 @@ export class SolanaService {
         })
       );
 
+      console.log('Transaction created successfully');
       return transaction;
     } catch (error) {
       console.error('Error creating payment transaction:', error);
-      throw new Error(`Failed to create transaction: ${error.message}`);
+      
+      // Provide more specific error messages
+      if (error.message.includes('account not found')) {
+        throw new Error('Sender wallet not found on Solana devnet. Please ensure your wallet is connected to devnet.');
+      } else if (error.message.includes('insufficient')) {
+        throw new Error('Insufficient balance. Please ensure you have enough SOL for transaction fees.');
+      } else if (error.message.includes('Invalid public key')) {
+        throw new Error('Invalid wallet address provided.');
+      } else {
+        throw new Error(`Transaction creation failed: ${error.message}`);
+      }
     }
   }
 

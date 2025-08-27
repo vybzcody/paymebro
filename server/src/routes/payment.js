@@ -157,7 +157,7 @@ router.post('/',
     } catch (error) {
       console.error('POST payment error:', error);
       
-      // Handle specific errors
+      // Handle specific errors for mobile wallets
       if (error.message.includes('Invalid public key')) {
         return res.status(400).json({
           error: 'Invalid public key provided',
@@ -165,16 +165,35 @@ router.post('/',
         });
       }
       
-      if (error.message.includes('Insufficient funds')) {
+      if (error.message.includes('Insufficient funds') || error.message.includes('Insufficient balance')) {
         return res.status(400).json({
-          error: 'Insufficient funds',
-          message: 'Account does not have enough balance for this transaction'
+          error: 'Insufficient Balance',
+          message: 'Your wallet needs more SOL to pay for transaction fees.',
+          details: {
+            network: 'devnet',
+            suggestion: 'Get devnet SOL from https://faucet.solana.com'
+          }
+        });
+      }
+
+      if (error.message.includes('account not found') || error.message.includes('Sender wallet not found')) {
+        return res.status(400).json({
+          error: 'Wallet Not Found',
+          message: 'Your wallet was not found on Solana devnet. Please ensure your wallet is connected to devnet.',
+          details: {
+            network: 'devnet',
+            suggestion: 'Switch to devnet in your wallet settings and get SOL from https://faucet.solana.com'
+          }
         });
       }
 
       res.status(500).json({
         error: 'Transaction creation failed',
-        message: error.message
+        message: error.message,
+        details: {
+          network: 'devnet',
+          timestamp: new Date().toISOString()
+        }
       });
     }
   }
