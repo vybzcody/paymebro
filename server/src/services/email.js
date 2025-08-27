@@ -1,0 +1,346 @@
+import { Resend } from 'resend';
+
+/**
+ * Email service for AfriPay notifications using Resend
+ */
+export class EmailService {
+  constructor() {
+    this.apiKey = process.env.RESEND_API_KEY;
+    this.fromEmail = process.env.RESEND_FROM_EMAIL || 'AfriPay <noreply@afripay.com>';
+    this.enabled = !!this.apiKey;
+    
+    if (this.enabled) {
+      this.resend = new Resend(this.apiKey);
+      console.log('📧 Email service enabled with Resend');
+    } else {
+      console.warn('⚠️  Email service disabled - RESEND_API_KEY not configured');
+      console.warn('   Add RESEND_API_KEY to .env to enable email notifications');
+    }
+  }
+
+  /**
+   * Send payment confirmation email to merchant
+   */
+  async sendPaymentConfirmation({
+    merchantEmail,
+    merchantName,
+    customerName,
+    amount,
+    currency,
+    description,
+    transactionSignature,
+    afripayFee,
+    netAmount
+  }) {
+    if (!this.enabled) {
+      console.log('Email service disabled, skipping payment confirmation');
+      return { success: false, reason: 'Email service not configured' };
+    }
+
+    try {
+      const emailData = {
+        from: this.fromEmail,
+        to: [merchantEmail],
+        subject: `💰 Payment Received - ${amount} ${currency} from ${customerName || 'Customer'}`,
+        html: this.generatePaymentConfirmationHTML({
+          merchantName,
+          customerName,
+          amount,
+          currency,
+          description,
+          transactionSignature,
+          afripayFee,
+          netAmount
+        })
+      };
+
+      const result = await this.resend.emails.send(emailData);
+      
+      console.log('✅ Payment confirmation email sent:', {
+        to: merchantEmail,
+        amount: `${amount} ${currency}`,
+        messageId: result.data?.id
+      });
+
+      return { success: true, messageId: result.data?.id };
+    } catch (error) {
+      console.error('❌ Failed to send payment confirmation email:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Send payment notification to customer (receipt)
+   */
+  async sendPaymentReceipt({
+    customerEmail,
+    customerName,
+    merchantName,
+    amount,
+    currency,
+    description,
+    transactionSignature,
+    afripayFee,
+    totalPaid
+  }) {
+    if (!this.enabled || !customerEmail) {
+      console.log('Email service disabled or no customer email, skipping receipt');
+      return { success: false, reason: 'Email service not configured or no customer email' };
+    }
+
+    try {
+      const emailData = {
+        from: this.fromEmail,
+        to: [customerEmail],
+        subject: `🧾 Payment Receipt - ${merchantName}`,
+        html: this.generatePaymentReceiptHTML({
+          customerName,
+          merchantName,
+          amount,
+          currency,
+          description,
+          transactionSignature,
+          afripayFee,
+          totalPaid
+        })
+      };
+
+      const result = await this.resend.emails.send(emailData);
+      
+      console.log('✅ Payment receipt email sent:', {
+        to: customerEmail,
+        amount: `${totalPaid} ${currency}`,
+        messageId: result.data?.id
+      });
+
+      return { success: true, messageId: result.data?.id };
+    } catch (error) {
+      console.error('❌ Failed to send payment receipt email:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Generate HTML for payment confirmation email (to merchant)
+   */
+  generatePaymentConfirmationHTML({
+    merchantName,
+    customerName,
+    amount,
+    currency,
+    description,
+    transactionSignature,
+    afripayFee,
+    netAmount
+  }) {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Payment Received - AfriPay</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .amount { font-size: 32px; font-weight: bold; color: #10b981; text-align: center; margin: 20px 0; }
+        .details { background: #f8fafc; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+        .detail-row:last-child { border-bottom: none; }
+        .label { font-weight: 600; color: #64748b; }
+        .value { font-weight: 500; }
+        .transaction { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 15px; margin: 20px 0; }
+        .footer { background: #f8fafc; padding: 20px; text-align: center; font-size: 14px; color: #64748b; }
+        .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 10px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>💰 Payment Received!</h1>
+          <p>You've received a new payment through AfriPay</p>
+        </div>
+        
+        <div class="content">
+          <div class="amount">+${netAmount} ${currency}</div>
+          <p style="text-align: center; color: #64748b; margin-bottom: 30px;">
+            Net amount deposited to your wallet
+          </p>
+          
+          <div class="details">
+            <div class="detail-row">
+              <span class="label">From:</span>
+              <span class="value">${customerName || 'Customer'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Description:</span>
+              <span class="value">${description}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Original Amount:</span>
+              <span class="value">${amount} ${currency}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">AfriPay Fee:</span>
+              <span class="value">${afripayFee} ${currency}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label"><strong>You Received:</strong></span>
+              <span class="value"><strong>${netAmount} ${currency}</strong></span>
+            </div>
+          </div>
+          
+          <div class="transaction">
+            <strong>🔗 Transaction ID:</strong><br>
+            <code style="word-break: break-all; font-size: 12px;">${transactionSignature}</code>
+            <br><br>
+            <a href="https://explorer.solana.com/tx/${transactionSignature}?cluster=devnet" class="button" target="_blank">
+              View on Solana Explorer
+            </a>
+          </div>
+          
+          <p style="text-align: center; margin-top: 30px;">
+            <a href="https://afripay.com/dashboard" class="button">View Dashboard</a>
+          </p>
+        </div>
+        
+        <div class="footer">
+          <p><strong>AfriPay</strong> - Secure Solana Payments</p>
+          <p>This payment was processed securely on the Solana blockchain.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+  }
+
+  /**
+   * Generate HTML for payment receipt email (to customer)
+   */
+  generatePaymentReceiptHTML({
+    customerName,
+    merchantName,
+    amount,
+    currency,
+    description,
+    transactionSignature,
+    afripayFee,
+    totalPaid
+  }) {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Payment Receipt - AfriPay</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .amount { font-size: 32px; font-weight: bold; color: #dc2626; text-align: center; margin: 20px 0; }
+        .details { background: #f8fafc; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+        .detail-row:last-child { border-bottom: none; }
+        .label { font-weight: 600; color: #64748b; }
+        .value { font-weight: 500; }
+        .transaction { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 15px; margin: 20px 0; }
+        .footer { background: #f8fafc; padding: 20px; text-align: center; font-size: 14px; color: #64748b; }
+        .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 10px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🧾 Payment Receipt</h1>
+          <p>Thank you for your payment!</p>
+        </div>
+        
+        <div class="content">
+          <div class="amount">-${totalPaid} ${currency}</div>
+          <p style="text-align: center; color: #64748b; margin-bottom: 30px;">
+            Payment successfully processed
+          </p>
+          
+          <div class="details">
+            <div class="detail-row">
+              <span class="label">Merchant:</span>
+              <span class="value">${merchantName}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Description:</span>
+              <span class="value">${description}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Amount:</span>
+              <span class="value">${amount} ${currency}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Processing Fee:</span>
+              <span class="value">${afripayFee} ${currency}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label"><strong>Total Paid:</strong></span>
+              <span class="value"><strong>${totalPaid} ${currency}</strong></span>
+            </div>
+          </div>
+          
+          <div class="transaction">
+            <strong>🔗 Transaction ID:</strong><br>
+            <code style="word-break: break-all; font-size: 12px;">${transactionSignature}</code>
+            <br><br>
+            <a href="https://explorer.solana.com/tx/${transactionSignature}?cluster=devnet" class="button" target="_blank">
+              View on Solana Explorer
+            </a>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p><strong>AfriPay</strong> - Secure Solana Payments</p>
+          <p>This payment was processed securely on the Solana blockchain.</p>
+          <p>Questions? Contact support@afripay.com</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+  }
+
+  /**
+   * Send test email to verify configuration
+   */
+  async sendTestEmail(toEmail) {
+    if (!this.enabled) {
+      return { success: false, reason: 'Email service not configured' };
+    }
+
+    try {
+      const result = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [toEmail],
+        subject: '✅ AfriPay Email Service Test',
+        html: `
+          <h2>🎉 Email Service Working!</h2>
+          <p>Your AfriPay email notifications are properly configured.</p>
+          <p><strong>Resend Integration:</strong> ✅ Active</p>
+          <p><strong>From Email:</strong> ${this.fromEmail}</p>
+          <p>You'll now receive notifications for:</p>
+          <ul>
+            <li>💰 Payment confirmations (merchants)</li>
+            <li>🧾 Payment receipts (customers)</li>
+            <li>📊 Transaction summaries</li>
+          </ul>
+        `
+      });
+
+      return { success: true, messageId: result.data?.id };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+}
+
+export const emailService = new EmailService();
