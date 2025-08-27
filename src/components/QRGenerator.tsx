@@ -128,7 +128,7 @@ export const QRGenerator = () => {
     <div className="space-y-6">
       {/* Network Status */}
       <NetworkStatus />
-      
+
       {/* Payment Form */}
       <Card>
         <CardHeader>
@@ -369,63 +369,66 @@ export const QRGenerator = () => {
                       ) : (
                         <div className="text-xs text-muted-foreground mt-2">
                           Direct payment - no additional fees
-                      </div>
-                    </div>
-                  </div>
-                )} {walletAddress && !paymentState.feeBreakdown && (
-                  <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
-                    <h4 className="font-semibold mb-2 flex items-center gap-2 text-primary">
-                      <Wallet className="w-4 h-4" />
-                      Payment Details
-                    </h4>
-                    <div className="text-sm space-y-1 text-left">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Amount:</span>
-                        <span className="font-mono">{formData.amount} {formData.currency}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Recipient:</span>
-                        <span className="font-mono text-xs">
-                          {walletAddress.slice(0, 8)}...{walletAddress.slice(-8)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Network:</span>
-                        <span>Solana {import.meta.env.VITE_SOLANA_NETWORK || 'devnet'}</span>
+                        </div>
+                      )} {walletAddress && !paymentState.feeBreakdown && (
+                        <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                          <h4 className="font-semibold mb-2 flex items-center gap-2 text-primary">
+                            <Wallet className="w-4 h-4" />
+                            Payment Details
+                          </h4>
+                          <div className="text-sm space-y-1 text-left">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Amount:</span>
+                              <span className="font-mono">{formData.amount} {formData.currency}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Recipient:</span>
+                              <span className="font-mono text-xs">
+                                {walletAddress.slice(0, 8)}...{walletAddress.slice(-8)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Network:</span>
+                              <span>Solana {import.meta.env.VITE_SOLANA_NETWORK || 'devnet'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => copyToClipboard(paymentState.paymentUrl || '', 'Payment URL copied!')}
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy URL
+                        </Button>
+                        <Button variant="outline" className="flex-1" onClick={downloadQRCode}>
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                        {paymentState.signature && (
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => window.open(`https://explorer.solana.com/tx/${paymentState.signature}?cluster=${import.meta.env.VITE_SOLANA_NETWORK || 'devnet'}`, '_blank')}
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Explorer
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
                 )}
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => copyToClipboard(paymentState.paymentUrl || '', 'Payment URL copied!')}
-                  >
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy URL
-                  </Button>
-                  <Button variant="outline" className="flex-1" onClick={downloadQRCode}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
-                  {paymentState.signature && (
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => window.open(`https://explorer.solana.com/tx/${paymentState.signature}?cluster=${import.meta.env.VITE_SOLANA_NETWORK || 'devnet'}`, '_blank')}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Explorer
-                    </Button>
-                  )}
-                </div>
               </div>
+
             </div>
           </CardContent>
         </Card>
       )}
+
     </div>
-  );
+  )
 };
