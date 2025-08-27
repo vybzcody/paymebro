@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { PublicKey } from '@solana/web3.js';
+import BigNumber from 'bignumber.js';
 import { useToast } from '@/hooks/use-toast';
 import { useWeb3Auth } from '@/contexts/Web3AuthContext';
 import { 
@@ -137,13 +138,7 @@ export const useSolanaPayOfficial = () => {
 
       toast({
         title: 'Payment Request Created',
-        description: `Customer pays ${solanaPayService.constructor.formatAmount(
-          paymentResult.feeBreakdown!.total, 
-          paymentData.currency
-        )} (includes ${solanaPayService.constructor.formatAmount(
-          paymentResult.feeBreakdown!.afripayFee, 
-          paymentData.currency
-        )} AfriPay fee)`,
+        description: `Customer pays ${paymentResult.feeBreakdown!.total.toFixed(4)} ${paymentData.currency} (includes ${paymentResult.feeBreakdown!.afripayFee.toFixed(4)} ${paymentData.currency} AfriPay fee)`,
       });
 
       // Start monitoring the payment
@@ -188,7 +183,7 @@ export const useSolanaPayOfficial = () => {
         reference,
         {
           recipient: expectedParams.recipient,
-          amount: new (await import('bignumber.js')).default(expectedParams.amount),
+          amount: new BigNumber(expectedParams.amount),
           splToken,
         },
         {
