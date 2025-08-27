@@ -96,19 +96,7 @@ export const useSolanaPayOfficial = () => {
     try {
       setPaymentState({ status: 'creating' });
 
-      // Create AfriPay payment with fees using the official service
-      const paymentResult = solanaPayService.createAfriPayPayment({
-        merchantWallet: publicKey,
-        amount: paymentData.amount,
-        currency: paymentData.currency,
-        description: paymentData.message,
-        merchantName: paymentData.label,
-        customerEmail: paymentData.customerEmail,
-        customerName: paymentData.customerName,
-        memo: paymentData.memo,
-      });
-
-      // Also create a backend record for tracking
+      // Create direct payment without fees using the backend
       const backendRequest = await AfriPayAPI.createPaymentRequest({
         userId: user?.verifierId || user?.email || publicKey.toString(),
         amount: paymentData.amount,
@@ -121,13 +109,13 @@ export const useSolanaPayOfficial = () => {
         memo: paymentData.memo,
       });
 
-      // Set payment state
+      // Set payment state with backend response
       setPaymentState({
         status: 'pending',
-        paymentUrl: paymentResult.paymentUrl,
-        qrCodeUrl: paymentResult.qrCodeUrl,
-        reference: paymentResult.reference,
-        feeBreakdown: paymentResult.feeBreakdown,
+        paymentUrl: backendRequest.paymentRequest.paymentUrl,
+        qrCodeUrl: backendRequest.paymentRequest.qrCodeUrl,
+        reference: new PublicKey(backendRequest.paymentRequest.reference),
+        feeBreakdown: backendRequest.feeBreakdown,
         expiresAt: backendRequest.paymentRequest.expiresAt,
         timeUntilExpiry: {
           expired: false,
@@ -138,17 +126,17 @@ export const useSolanaPayOfficial = () => {
 
       toast({
         title: 'Payment Request Created',
-        description: `Customer pays ${paymentResult.feeBreakdown!.total.toFixed(4)} ${paymentData.currency} (includes ${paymentResult.feeBreakdown!.afripayFee.toFixed(4)} ${paymentData.currency} AfriPay fee)`,
+        description: `Customer pays ${paymentData.amount.toFixed(4)} ${paymentData.currency} (no additional fees)`,
       });
 
-      // Start monitoring the payment
-      monitorPaymentStatus(paymentResult.reference, {
+      // Start monitoring the payment with exact amount
+      monitorPaymentStatus(new PublicKey(backendRequest.paymentRequest.reference), {
         recipient: publicKey,
-        amount: paymentResult.feeBreakdown!.total,
+        amount: paymentData.amount, // Use exact amount without fees
         currency: paymentData.currency,
       });
 
-      return paymentResult;
+      return backendRequest;
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to create payment request';
       setPaymentState({ status: 'failed', error: errorMessage });
@@ -253,10 +241,16 @@ export const useSolanaPayOfficial = () => {
   }, []);
 
   /**
-   * Calculate fees for display
+   * Calculate fees for display (now returns zero fees)
    */
   const calculateFees = useCallback((amount: number, currency: 'SOL' | 'USDC') => {
-    return solanaPayService.calculateAfriPayFees(amount, currency);
+    return {
+      originalAmount: amount,
+      afripayFee: 0,
+      merchantReceives: amount,
+      total: amount,
+      currency,
+    };
   }, []);
 
   /**

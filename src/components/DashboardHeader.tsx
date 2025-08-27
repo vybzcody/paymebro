@@ -3,6 +3,7 @@ import { Bell, Menu, Settings, User, HelpCircle, Users, CreditCard, LogOut, Wall
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
@@ -52,21 +53,21 @@ export const DashboardHeader = () => {
 
   const NavLink = ({ href, label, mobile = false }: { href: string; label: string; mobile?: boolean }) => {
     const isActive = window.location.pathname === href;
-    const baseClasses = mobile 
-      ? "block px-3 py-2 rounded-lg text-left w-full" 
+    const baseClasses = mobile
+      ? "block px-3 py-2 rounded-lg text-left w-full"
       : "transition-colors";
-    const activeClasses = isActive 
+    const activeClasses = isActive
       ? "text-primary font-medium" + (mobile ? " bg-primary/10" : "")
       : "text-muted-foreground hover:text-primary";
-    
+
     return (
-      <a 
-        href={href} 
+      <Link
+        to={href}
         className={`${baseClasses} ${activeClasses}`}
         onClick={() => mobile && setIsOpen(false)}
       >
         {label}
-      </a>
+      </Link>
     );
   };
 
@@ -118,19 +119,19 @@ export const DashboardHeader = () => {
                 <CreditCard className="w-4 h-4" />
               </a>
             </Button>
-            
+
             <Button variant="ghost" size="sm" asChild>
               <a href="/help">
                 <HelpCircle className="w-4 h-4" />
               </a>
             </Button>
-            
+
             <Button variant="ghost" size="sm" asChild>
               <a href="/settings">
                 <Settings className="w-4 h-4" />
               </a>
             </Button>
-            
+
             {/* User Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

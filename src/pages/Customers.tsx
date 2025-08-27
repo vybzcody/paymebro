@@ -21,13 +21,16 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { AddCustomerModal } from "@/components/AddCustomerModal";
+import { Customer, NewCustomerData } from "@/types/customer";
 
 const Customers = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const customers = [
+  const [customers, setCustomers] = useState<Customer[]>([
     {
       id: "CUST001",
       name: "John Doe",
@@ -93,7 +96,7 @@ const Customers = () => {
       status: "active",
       avatar: "AH"
     }
-  ];
+  ]);
 
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -101,11 +104,39 @@ const Customers = () => {
     customer.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const generateCustomerId = (): string => {
+    const existingIds = customers.map(c => parseInt(c.id.replace('CUST', '')));
+    const maxId = Math.max(...existingIds);
+    return `CUST${String(maxId + 1).padStart(3, '0')}`;
+  };
+
+  const generateAvatar = (name: string): string => {
+    return name.split(' ').map(word => word.charAt(0).toUpperCase()).join('').slice(0, 2);
+  };
+
   const handleAddCustomer = () => {
-    toast({
-      title: "Add Customer",
-      description: "Customer creation form would open here",
-    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleCustomerAdded = (customerData: NewCustomerData) => {
+    const newCustomer: Customer = {
+      id: generateCustomerId(),
+      name: customerData.name,
+      email: customerData.email,
+      phone: customerData.phone,
+      location: customerData.location,
+      joinDate: new Date().toISOString().split('T')[0],
+      totalSpent: "$0.00",
+      totalTransactions: 0,
+      lastTransaction: "Never",
+      status: "active",
+      avatar: generateAvatar(customerData.name),
+      address: customerData.address,
+      company: customerData.company,
+      notes: customerData.notes
+    };
+
+    setCustomers(prev => [...prev, newCustomer]);
   };
 
   const handleViewCustomer = (customerId: string) => {
@@ -342,6 +373,13 @@ const Customers = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Add Customer Modal */}
+        <AddCustomerModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onAddCustomer={handleCustomerAdded}
+        />
     </div>
   );
 };

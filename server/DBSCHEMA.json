@@ -1,0 +1,57 @@
+[
+    {
+        "schemaname": "public",
+        "tablename": "analytics_events",
+        "rowsecurity": true
+    },
+    {
+        "schemaname": "public",
+        "tablename": "api_keys",
+        "rowsecurity": true
+    },
+    {
+        "schemaname": "public",
+        "tablename": "customers",
+        "rowsecurity": true
+    },
+    {
+        "schemaname": "public",
+        "tablename": "invoices",
+        "rowsecurity": true
+    },
+    {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "rowsecurity": true
+    },
+    {
+        "schemaname": "public",
+        "tablename": "payment_requests",
+        "rowsecurity": true
+    },
+    {
+        "schemaname": "public",
+        "tablename": "subscription_plans",
+        "rowsecurity": false
+    },
+    {
+        "schemaname": "public",
+        "tablename": "transactions",
+        "rowsecurity": true
+    },
+    {
+        "schemaname": "public",
+        "tablename": "usage_records",
+        "rowsecurity": true
+    },
+    {
+        "schemaname": "public",
+        "tablename": "user_subscriptions",
+        "rowsecurity": true
+    },
+    {
+        "schemaname": "public",
+        "tablename": "users",
+        "rowsecurity": true
+    }
+]
