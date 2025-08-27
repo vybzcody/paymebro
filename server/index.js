@@ -12,6 +12,7 @@ import {
 // Import routes
 import paymentRouter from './src/routes/payment.js';
 import createRouter from './src/routes/create.js';
+import confirmRouter from './src/routes/confirm.js';
 import healthRouter from './src/routes/health.js';
 import networkRouter from './src/routes/network.js';
 
@@ -83,6 +84,7 @@ app.get('/', (req, res) => {
 // API routes
 app.use('/api/payment', paymentRouter);
 app.use('/api/create', createRouter);
+app.use('/api/confirm', confirmRouter);
 
 // API documentation endpoint
 app.get('/docs', (req, res) => {

@@ -76,10 +76,10 @@ export const QRGenerator = () => {
     }
 
     const amount = parseFloat(formData.amount);
-    if (amount <= 0) {
+    if (amount <= 0 || amount < 0.000001) {
       toast({
         title: "Invalid Amount",
-        description: "Please enter a valid amount greater than 0",
+        description: "Please enter a valid amount (minimum 0.000001)",
         variant: "destructive",
       });
       return;
@@ -147,9 +147,9 @@ export const QRGenerator = () => {
                 <Input
                   id="amount"
                   type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
+                  step="0.000001"
+                  min="0.000001"
+                  placeholder="0.000000"
                   value={formData.amount}
                   onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                   className="pl-10"
