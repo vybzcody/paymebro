@@ -20,9 +20,31 @@ router.post('/',
     body('description').notEmpty().withMessage('Description is required'),
     body('recipientWallet').notEmpty().withMessage('Recipient wallet is required'),
     body('currency').optional().isIn(['USDC', 'SOL']).withMessage('Currency must be USDC or SOL'),
-    body('customerEmail').optional().isEmail().withMessage('Valid email required'),
-    body('customerName').optional().isLength({ min: 1, max: 100 }).withMessage('Customer name must be 1-100 characters'),
-    body('merchantName').optional().isLength({ min: 1, max: 100 }).withMessage('Merchant name must be 1-100 characters'),
+    body('customerEmail').optional().custom((value) => {
+      if (value && value.trim() !== '') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          throw new Error('Valid email required');
+        }
+      }
+      return true;
+    }),
+    body('customerName').optional().custom((value) => {
+      if (value && value.trim() !== '') {
+        if (value.length < 1 || value.length > 100) {
+          throw new Error('Customer name must be 1-100 characters');
+        }
+      }
+      return true;
+    }),
+    body('merchantName').optional().custom((value) => {
+      if (value && value.trim() !== '') {
+        if (value.length < 1 || value.length > 100) {
+          throw new Error('Merchant name must be 1-100 characters');
+        }
+      }
+      return true;
+    }),
   ],
   async (req, res) => {
     try {

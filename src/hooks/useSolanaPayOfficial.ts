@@ -103,10 +103,10 @@ export const useSolanaPayOfficial = () => {
         description: paymentData.message,
         recipientWallet: publicKey.toString(),
         currency: paymentData.currency,
-        customerEmail: paymentData.customerEmail,
-        customerName: paymentData.customerName,
-        merchantName: paymentData.label,
-        memo: paymentData.memo,
+        customerEmail: paymentData.customerEmail && paymentData.customerEmail.trim() !== '' ? paymentData.customerEmail : undefined,
+        customerName: paymentData.customerName && paymentData.customerName.trim() !== '' ? paymentData.customerName : undefined,
+        merchantName: paymentData.label && paymentData.label.trim() !== '' ? paymentData.label : undefined,
+        memo: paymentData.memo && paymentData.memo.trim() !== '' ? paymentData.memo : undefined,
       });
 
       // Set payment state with backend response
