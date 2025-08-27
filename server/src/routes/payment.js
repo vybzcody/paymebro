@@ -4,6 +4,7 @@ import { PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { solanaService } from '../services/solana.js';
 import { databaseService } from '../services/database.js';
+import { emailService } from '../services/email.js';
 import { SOLANA_CONFIG } from '../config/index.js';
 
 const router = express.Router();
@@ -347,6 +348,11 @@ router.post('/verify',
         fee: transactionDetails.fee
       });
 
+      console.log('✅ Payment verified successfully, sending email notifications...');
+
+      // Send email notifications
+      await sendPaymentNotifications(paymentRequest, signature, transactionDetails, platformFee);
+
       res.status(200).json({
         success: true,
         transaction,
@@ -363,5 +369,131 @@ router.post('/verify',
     }
   }
 );
+
+/**
+ * POST /api/payment/test-email - Test email sending (simple test)
+ */
+router.post('/test-email',
+  [
+    body('email').isEmail().withMessage('Valid email is required'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+
+      const { email } = req.body;
+
+      console.log('🧪 Testing email with simple Resend call...');
+
+      // Simple test email using exact Resend documentation format
+      const result = await emailService.resend.emails.send({
+        from: 'AfriPay <onboarding@resend.dev>',
+        to: [email],
+        subject: '🧪 AfriPay Email Test',
+        html: '<p>🎉 Congrats! Your <strong>AfriPay email system</strong> is working!</p><p>✅ Resend integration successful</p>'
+      });
+
+      console.log('📧 Simple test result:', result);
+
+      res.status(200).json({
+        success: true,
+        message: 'Test email sent successfully',
+        result
+      });
+
+    } catch (error) {
+      console.error('❌ Simple email test failed:', error);
+      res.status(500).json({
+        error: 'Failed to send test email',
+        message: error.message,
+        details: error
+      });
+    }
+  }
+);
+
+/**
+ * Send payment notification emails
+ */
+async function sendPaymentNotifications(paymentRequest, signature, transactionDetails, platformFee) {
+  try {
+    const metadata = paymentRequest.metadata || {};
+    const merchantName = metadata.merchant_name || 'Merchant';
+    const customerName = metadata.customer_name || 'Customer';
+    const afripayFee = metadata.afripay_fee || platformFee || 0;
+    const originalAmount = metadata.original_amount || paymentRequest.amount_usdc;
+    const netAmount = paymentRequest.amount_usdc - platformFee; // Merchant receives amount minus platform fee
+
+    console.log('📧 Preparing to send email notifications:', {
+      merchantEmail: paymentRequest.user_id,
+      customerEmail: metadata.customer_email,
+      originalAmount,
+      afripayFee,
+      netAmount,
+      signature
+    });
+
+    // Send confirmation email to merchant (if user_id looks like an email)
+    if (paymentRequest.user_id && paymentRequest.user_id.includes('@')) {
+      const merchantEmail = paymentRequest.user_id;
+      
+      console.log('📧 Sending merchant confirmation email to:', merchantEmail);
+      
+      const merchantResult = await emailService.sendPaymentConfirmation({
+        merchantEmail,
+        merchantName,
+        customerName,
+        amount: originalAmount,
+        currency: paymentRequest.currency,
+        description: paymentRequest.description,
+        transactionSignature: signature,
+        afripayFee,
+        netAmount
+      });
+
+      if (merchantResult.success) {
+        console.log('✅ Merchant email sent successfully:', merchantResult.messageId);
+      } else {
+        console.log('❌ Merchant email failed:', merchantResult.error || merchantResult.reason);
+      }
+    }
+
+    // Send receipt to customer (if we have customer email)
+    const customerEmail = metadata.customer_email;
+    if (customerEmail) {
+      console.log('📧 Sending customer receipt email to:', customerEmail);
+      
+      const customerResult = await emailService.sendPaymentReceipt({
+        customerEmail,
+        customerName,
+        merchantName,
+        amount: originalAmount,
+        currency: paymentRequest.currency,
+        description: paymentRequest.description,
+        transactionSignature: signature,
+        afripayFee,
+        totalPaid: paymentRequest.amount_usdc
+      });
+
+      if (customerResult.success) {
+        console.log('✅ Customer email sent successfully:', customerResult.messageId);
+      } else {
+        console.log('❌ Customer email failed:', customerResult.error || customerResult.reason);
+      }
+    } else {
+      console.log('ℹ️  No customer email provided, skipping customer receipt');
+    }
+
+  } catch (error) {
+    console.error('❌ Failed to send payment notifications:', error);
+    // Don't fail the payment verification if email fails
+  }
+}
 
 export default router;

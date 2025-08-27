@@ -6,12 +6,13 @@ import { Resend } from 'resend';
 export class EmailService {
   constructor() {
     this.apiKey = process.env.RESEND_API_KEY;
-    this.fromEmail = process.env.RESEND_FROM_EMAIL || 'AfriPay <noreply@afripay.com>';
+    this.fromEmail = process.env.RESEND_FROM_EMAIL || 'AfriPay <onboarding@resend.dev>'; // Use Resend's default for testing
     this.enabled = !!this.apiKey;
     
     if (this.enabled) {
       this.resend = new Resend(this.apiKey);
       console.log('📧 Email service enabled with Resend');
+      console.log('📧 From email:', this.fromEmail);
     } else {
       console.warn('⚠️  Email service disabled - RESEND_API_KEY not configured');
       console.warn('   Add RESEND_API_KEY to .env to enable email notifications');
@@ -38,7 +39,9 @@ export class EmailService {
     }
 
     try {
-      const emailData = {
+      console.log('📧 Sending merchant email with Resend API...');
+      
+      const result = await this.resend.emails.send({
         from: this.fromEmail,
         to: [merchantEmail],
         subject: `💰 Payment Received - ${amount} ${currency} from ${customerName || 'Customer'}`,
@@ -52,19 +55,24 @@ export class EmailService {
           afripayFee,
           netAmount
         })
-      };
-
-      const result = await this.resend.emails.send(emailData);
+      });
+      
+      console.log('📧 Resend API response:', result);
       
       console.log('✅ Payment confirmation email sent:', {
         to: merchantEmail,
         amount: `${amount} ${currency}`,
-        messageId: result.data?.id
+        messageId: result.data?.id || result.id
       });
 
-      return { success: true, messageId: result.data?.id };
+      return { success: true, messageId: result.data?.id || result.id };
     } catch (error) {
       console.error('❌ Failed to send payment confirmation email:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        statusCode: error.statusCode
+      });
       return { success: false, error: error.message };
     }
   }
@@ -89,7 +97,9 @@ export class EmailService {
     }
 
     try {
-      const emailData = {
+      console.log('📧 Sending customer receipt with Resend API...');
+      
+      const result = await this.resend.emails.send({
         from: this.fromEmail,
         to: [customerEmail],
         subject: `🧾 Payment Receipt - ${merchantName}`,
@@ -103,19 +113,24 @@ export class EmailService {
           afripayFee,
           totalPaid
         })
-      };
-
-      const result = await this.resend.emails.send(emailData);
+      });
+      
+      console.log('📧 Resend API response:', result);
       
       console.log('✅ Payment receipt email sent:', {
         to: customerEmail,
         amount: `${totalPaid} ${currency}`,
-        messageId: result.data?.id
+        messageId: result.data?.id || result.id
       });
 
-      return { success: true, messageId: result.data?.id };
+      return { success: true, messageId: result.data?.id || result.id };
     } catch (error) {
       console.error('❌ Failed to send payment receipt email:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        statusCode: error.statusCode
+      });
       return { success: false, error: error.message };
     }
   }
