@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import NetworkStatus from "./NetworkStatus";
 import {
   Copy,
   Download,
@@ -125,6 +126,9 @@ export const QRGenerator = () => {
 
   return (
     <div className="space-y-6">
+      {/* Network Status */}
+      <NetworkStatus />
+      
       {/* Payment Form */}
       <Card>
         <CardHeader>
