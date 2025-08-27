@@ -6,8 +6,8 @@ import { SolanaPrivateKeyProvider } from '@web3auth/solana-provider';
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 // Configuration
 const clientId = import.meta.env.VITE_WEB3AUTH_CLIENT_ID || "BHo_Z8iOfv-91EMkE4VRZZyd3xLSPJ8zTGGZDdaMqvVBHBSoy2KLv0te7YojcInFl_EokROy9WElMQGXVjtZBSk";
-const solanaNetwork = import.meta.env.VITE_SOLANA_NETWORK || 'devnet';
-const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || clusterApiUrl('devnet');
+const solanaNetwork = import.meta.env.VITE_SOLANA_NETWORK || 'testnet';
+const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || clusterApiUrl('testnet');
 
 // Chain configuration
 const getChainId = (network: string) => {
@@ -17,8 +17,9 @@ const getChainId = (network: string) => {
     case 'testnet':
       return '0x66';
     case 'devnet':
-    default:
       return '0x67';
+    default:
+      return '0x66';
   }
 };
 
@@ -28,9 +29,11 @@ const chainConfig = {
   rpcTarget: rpcUrl,
   displayName: solanaNetwork === 'mainnet'
     ? 'Solana Mainnet'
-    : solanaNetwork === 'devnet'
-      ? 'Solana Devnet'
-      : 'Solana Testnet',
+    : solanaNetwork === 'testnet'
+      ? 'Solana Testnet'
+      : solanaNetwork === 'devnet'
+        ? 'Solana Devnet'
+        : 'Solana Devnet',
   blockExplorerUrl: solanaNetwork === 'mainnet'
     ? 'https://explorer.solana.com'
     : `https://explorer.solana.com?cluster=${solanaNetwork}`,
