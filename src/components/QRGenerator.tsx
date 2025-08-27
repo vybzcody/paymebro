@@ -339,16 +339,22 @@ export const QRGenerator = () => {
                     </h4>
                     <div className="text-sm space-y-1 text-left">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Amount:</span>
+                        <span className="text-muted-foreground">Requested Amount:</span>
                         <span className="font-mono">{paymentState.feeBreakdown.originalAmount.toFixed(4)} {formData.currency}</span>
                       </div>
-                      <div className="border-t pt-1 mt-2">
-                        <div className="flex justify-between font-semibold">
-                          <span>Customer pays:</span>
-                          <span className="font-mono">{paymentState.feeBreakdown.total.toFixed(4)} {formData.currency}</span>
+                      {paymentState.feeBreakdown.afripayFee > 0 && (
+                        <div className="flex justify-between text-amber-600">
+                          <span className="text-muted-foreground">AfriPay Service Fee:</span>
+                          <span className="font-mono">+{paymentState.feeBreakdown.afripayFee.toFixed(4)} {formData.currency}</span>
                         </div>
-                        <div className="flex justify-between text-green-600 text-xs mt-1">
-                          <span>You receive:</span>
+                      )}
+                      <div className="border-t pt-2 mt-2">
+                        <div className="flex justify-between font-semibold text-lg">
+                          <span>Customer Pays:</span>
+                          <span className="font-mono text-blue-600">{paymentState.feeBreakdown.total.toFixed(4)} {formData.currency}</span>
+                        </div>
+                        <div className="flex justify-between text-green-600 text-sm mt-1">
+                          <span>You Receive:</span>
                           <span className="font-mono">{paymentState.feeBreakdown.merchantReceives.toFixed(4)} {formData.currency}</span>
                         </div>
                       </div>
@@ -356,8 +362,13 @@ export const QRGenerator = () => {
                         <span>Network:</span>
                         <span>Solana {import.meta.env.VITE_SOLANA_NETWORK || 'devnet'}</span>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-2">
-                        Direct payment - no additional fees
+                      {paymentState.feeBreakdown.afripayFee > 0 ? (
+                        <div className="text-xs text-amber-700 mt-2 p-2 bg-amber-50 rounded border border-amber-200">
+                          <strong>AfriPay SaaS:</strong> 2.9% + $0.30 processing fee enables secure, instant Solana payments with fraud protection and 24/7 support.
+                        </div>
+                      ) : (
+                        <div className="text-xs text-muted-foreground mt-2">
+                          Direct payment - no additional fees
                       </div>
                     </div>
                   </div>

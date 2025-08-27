@@ -108,17 +108,34 @@ router.post('/',
       let transaction;
       
       if (paymentRequest) {
-        // This is an AfriPay payment - use exact amount without fees
-        console.log('Creating AfriPay transaction with exact amount');
+        // This is an AfriPay payment - create transaction with fee splitting
+        console.log('Creating AfriPay transaction with fee distribution');
         
-        transaction = await solanaService.createPaymentTransaction({
-          account,
-          recipient,
-          amount: paymentRequest.amount_usdc, // Use exact amount from database
-          splToken: splToken || SOLANA_CONFIG.usdcMint,
-          reference,
-          memo: memoField || `AfriPay: ${paymentRequest.description}`
-        });
+        const originalAmount = paymentRequest.metadata?.original_amount || paymentRequest.amount_usdc;
+        const afripayFee = paymentRequest.metadata?.afripay_fee || 0;
+        
+        if (afripayFee > 0) {
+          // Use fee-splitting transaction
+          transaction = await solanaService.createAfriPayTransaction({
+            account,
+            recipient,
+            originalAmount: originalAmount,
+            afripayFee: afripayFee,
+            splToken: splToken || SOLANA_CONFIG.usdcMint,
+            reference,
+            memo: memoField || `AfriPay: ${paymentRequest.description}`
+          });
+        } else {
+          // Fallback to simple transaction for legacy payments
+          transaction = await solanaService.createPaymentTransaction({
+            account,
+            recipient,
+            amount: paymentRequest.amount_usdc,
+            splToken: splToken || SOLANA_CONFIG.usdcMint,
+            reference,
+            memo: memoField || `AfriPay: ${paymentRequest.description}`
+          });
+        }
       } else {
         // Standard Solana Pay transaction
         console.log('Creating standard Solana Pay transaction');
