@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useAnalytics, AnalyticsFilters } from '@/hooks/useAnalytics';
+import { useRealtimeAnalytics } from '@/hooks/useRealtimeAnalytics';
+import { AnalyticsFilters } from '@/hooks/useAnalytics';
 import { RevenueMetrics } from '@/components/analytics/RevenueMetrics';
 import { AnalyticsFilters as FiltersComponent } from '@/components/analytics/AnalyticsFilters';
 import { CurrencyBreakdown } from '@/components/analytics/CurrencyBreakdown';
+import { RealtimeDebug } from '@/components/RealtimeDebug';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, QrCode, Link, FileText, TrendingUp } from "lucide-react";
+import { Plus, QrCode, Link, FileText, TrendingUp, Zap } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 
 export const Dashboard = () => {
@@ -17,7 +19,7 @@ export const Dashboard = () => {
     status: 'all'
   });
 
-  const { metrics, loading } = useAnalytics(filters);
+  const { metrics, loading } = useRealtimeAnalytics(filters);
 
   const quickActions = [
     {
@@ -48,19 +50,23 @@ export const Dashboard = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
             Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋
+            <Zap className="h-6 w-6 ml-2 text-yellow-500" title="Real-time updates enabled" />
           </h1>
           <p className="text-gray-500 mt-1">
-            Here's what's happening with your payments today.
+            Live dashboard with real-time payment updates
           </p>
         </div>
-        <Button asChild>
-          <RouterLink to="/qr-codes">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Payment
-          </RouterLink>
-        </Button>
+        <div className="flex gap-3">
+          <RealtimeDebug />
+          <Button asChild>
+            <RouterLink to="/qr-codes">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Payment
+            </RouterLink>
+          </Button>
+        </div>
       </div>
 
       {/* Analytics Filters */}

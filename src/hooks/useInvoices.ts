@@ -55,10 +55,60 @@ export const useInvoices = () => {
     }
   }
 
+  // Real-time subscription
   useEffect(() => {
     const walletAddress = user?.walletAddress || publicKey?.toString()
-    if (walletAddress) {
-      fetchInvoices()
+    if (!walletAddress) return
+
+    fetchInvoices()
+
+    // Get user ID for subscription
+    const setupSubscription = async () => {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('wallet_address', walletAddress)
+        .single()
+
+      if (!userData) return
+
+      // Set up real-time subscription
+      const subscription = supabase
+        .channel('invoices')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'invoices',
+            filter: `user_id=eq.${userData.id}`
+          },
+          (payload) => {
+            console.log('🔄 Invoice update:', payload)
+            
+            if (payload.eventType === 'INSERT') {
+              setInvoices(prev => [payload.new as Invoice, ...prev])
+            } else if (payload.eventType === 'UPDATE') {
+              setInvoices(prev => 
+                prev.map(invoice => 
+                  invoice.id === payload.new.id ? payload.new as Invoice : invoice
+                )
+              )
+            } else if (payload.eventType === 'DELETE') {
+              setInvoices(prev => prev.filter(invoice => invoice.id !== payload.old.id))
+            }
+          }
+        )
+        .subscribe()
+
+      return () => {
+        subscription.unsubscribe()
+      }
+    }
+
+    const cleanup = setupSubscription()
+    return () => {
+      cleanup.then(fn => fn?.())
     }
   }, [user?.walletAddress, publicKey])
 

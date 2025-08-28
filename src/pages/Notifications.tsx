@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, CheckCircle, Clock, DollarSign } from "lucide-react";
-import { useTransactions } from "@/hooks/useTransactions";
+import { Bell, CheckCircle, Clock, DollarSign, Zap } from "lucide-react";
+import { useRealtimeTransactions } from "@/hooks/useRealtimeTransactions";
 import { EmptyState, TransactionSkeleton } from "@/components/EmptyStates";
 
 const Notifications = () => {
-  const { transactions, loading } = useTransactions();
+  const { transactions, loading } = useRealtimeTransactions();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
@@ -13,7 +13,7 @@ const Notifications = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'confirmed':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'pending':
         return <Clock className="h-4 w-4 text-yellow-500" />;
@@ -24,7 +24,7 @@ const Notifications = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'confirmed':
         return 'bg-green-100 text-green-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
@@ -37,8 +37,11 @@ const Notifications = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          <p className="text-gray-500">Recent payment activity and updates</p>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            Notifications
+            <Zap className="h-5 w-5 ml-2 text-yellow-500" title="Real-time updates" />
+          </h1>
+          <p className="text-gray-500">Live payment activity and updates</p>
         </div>
       </div>
 
@@ -51,13 +54,13 @@ const Notifications = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Bell className="h-5 w-5 mr-2" />
-              Recent Transactions ({transactions.length})
+              Live Transactions ({transactions.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {transactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                       <DollarSign className="h-6 w-6 text-blue-600" />
