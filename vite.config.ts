@@ -28,10 +28,11 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       buffer: "buffer",
+      process: "process/browser",
     },
   },
   optimizeDeps: {
-    include: ['buffer', '@web3auth/modal', '@web3auth/base', '@web3auth/solana-provider'],
+    include: ['buffer', 'process', '@web3auth/modal', '@web3auth/base', '@web3auth/solana-provider'],
     exclude: ['@web3auth/modal-react-hooks']
   },
   build: {
