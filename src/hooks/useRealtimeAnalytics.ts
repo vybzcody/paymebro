@@ -57,7 +57,7 @@ export const useRealtimeAnalytics = (filters: AnalyticsFilters) => {
       
       let query = supabase
         .from('transactions')
-        .select('original_amount, amount, currency, created_at, afripay_fee')
+        .select('merchant_amount, amount, currency, created_at, fee_amount')
         .eq('user_id', userId)
         .gte('created_at', start)
         .lte('created_at', end);
@@ -76,8 +76,12 @@ export const useRealtimeAnalytics = (filters: AnalyticsFilters) => {
 
       // Calculate merchant revenue (what they actually receive)
       const totalRevenue = transactions?.reduce((sum, tx) => {
-        // Use original_amount (merchant receives) not total amount (customer pays)
-        return sum + Number(tx.original_amount || tx.amount);
+        return sum + Number(tx.merchant_amount || tx.amount);
+      }, 0) || 0;
+
+      // Calculate platform fees collected
+      const platformRevenue = transactions?.reduce((sum, tx) => {
+        return sum + Number(tx.fee_amount || 0);
       }, 0) || 0;
       const totalTransactions = transactions?.length || 0;
       
@@ -122,7 +126,8 @@ export const useRealtimeAnalytics = (filters: AnalyticsFilters) => {
         mrr,
         arr,
         growth,
-        currencyBreakdown
+        currencyBreakdown,
+        platformRevenue
       });
     } catch (error) {
       console.error('Error fetching analytics:', error);
