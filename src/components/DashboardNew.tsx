@@ -5,7 +5,6 @@ import { AnalyticsFilters } from '@/hooks/useAnalytics';
 import { RevenueMetrics } from '@/components/analytics/RevenueMetrics';
 import { AnalyticsFilters as FiltersComponent } from '@/components/analytics/AnalyticsFilters';
 import { CurrencyBreakdown } from '@/components/analytics/CurrencyBreakdown';
-import { RealtimeDebug } from '@/components/RealtimeDebug';
 import { SubscriptionModal } from '@/components/SubscriptionModal';
 import { GroupPaymentModal } from '@/components/GroupPaymentModal';
 import { PaymentTemplates } from '@/components/PaymentTemplates';
@@ -77,7 +76,7 @@ export const Dashboard = () => {
   return (
     <div className="space-y-6">
       <SuccessAnimation show={showSuccess} />
-      
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -90,7 +89,6 @@ export const Dashboard = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <RealtimeDebug />
           <Button asChild>
             <RouterLink to="/qr-codes">
               <Plus className="h-4 w-4 mr-2" />
@@ -158,13 +156,13 @@ export const Dashboard = () => {
       {/* Secondary Analytics */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <CurrencyBreakdown metrics={metrics} loading={loading} />
-        
-        <FeeBreakdown 
+
+        <FeeBreakdown
           merchantRevenue={metrics.totalRevenue}
           platformFees={metrics.platformRevenue || 0}
           totalTransactions={metrics.totalTransactions}
         />
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -233,7 +231,7 @@ export const Dashboard = () => {
         onClose={() => setShowSubscriptionModal(false)}
         onSuccess={() => setShowSuccess(true)}
       />
-      
+
       <GroupPaymentModal
         isOpen={showGroupPaymentModal}
         onClose={() => setShowGroupPaymentModal(false)}
