@@ -8,17 +8,11 @@ import {
   Star,
   Globe,
   Shield,
-  Zap,
-  Users,
-  TrendingUp,
   QrCode,
   CreditCard,
-  Smartphone,
   BarChart3,
   HeadphonesIcon,
-  Award,
   MapPin,
-  DollarSign,
   Clock,
   Menu,
   X,
@@ -133,54 +127,41 @@ const Landing = () => {
 
   const pricingPlans = [
     {
-      name: "Free",
-      price: 0,
-      period: "forever",
-      description: "Perfect for getting started",
+      name: "Pay-as-you-go",
+      price: "2.9%",
+      period: "+ $0.30 per transaction",
+      description: "Simple, transparent pricing for everyone",
       features: [
-        "Up to 50 transactions/month",
-        "Basic dashboard",
-        "QR code generation",
-        "Email support",
-        "Standard analytics"
+        "Unlimited transactions",
+        "Real-time analytics dashboard",
+        "QR code & payment link generation",
+        "Email invoicing",
+        "Multi-currency support (SOL/USDC)",
+        "Instant Solana settlements",
+        "24/7 email support"
       ],
-      transactionFee: "2.9%",
-      popular: false,
-      cta: "Start Free"
-    },
-    {
-      name: "Starter",
-      price: 15,
-      period: "month",
-      description: "Great for small businesses",
-      features: [
-        "Up to 1,000 transactions/month",
-        "Advanced analytics",
-        "Custom QR branding",
-        "Priority support",
-        "Invoice management",
-        "API access"
-      ],
-      transactionFee: "2.4%",
+      transactionFee: "2.9% + $0.30",
       popular: true,
-      cta: "Start Trial"
+      cta: "Start Accepting Payments"
     },
     {
-      name: "Business",
-      price: 49,
-      period: "month",
-      description: "For growing businesses",
+      name: "Enterprise",
+      price: "Custom",
+      period: "tailored workflows",
+      description: "Custom solutions for corporations",
       features: [
-        "Up to 10,000 transactions/month",
-        "Advanced reporting",
-        "White-label options",
-        "Multi-user accounts",
-        "Dedicated support",
-        "Custom integrations"
+        "Volume-based pricing discounts",
+        "Custom payment workflows",
+        "White-label solutions",
+        "Multi-signature accounts",
+        "Advanced reporting & analytics",
+        "Dedicated account manager",
+        "Priority technical support",
+        "Custom API integrations"
       ],
-      transactionFee: "1.9%",
+      transactionFee: "Negotiable",
       popular: false,
-      cta: "Start Trial"
+      cta: "Contact Sales"
     }
   ];
 
@@ -221,7 +202,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Debug Section - Remove in production */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 m-4">
           <div className="flex items-center justify-between">
             <div>
@@ -246,7 +227,7 @@ const Landing = () => {
             )}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Error Alert */}
       {error && (
@@ -282,14 +263,14 @@ const Landing = () => {
             </div>
 
             <div className="hidden md:flex items-center space-x-4">
-              <Button
+              {/* <Button
                 variant="ghost"
                 onClick={handleGetStarted}
                 disabled={isLoading || isLoggingIn}
               >
                 <LogIn className="w-4 h-4 mr-2" />
                 Sign In
-              </Button>
+              </Button> */}
               <Button
                 onClick={handleGetStarted}
                 className="btn-press"
@@ -308,7 +289,7 @@ const Landing = () => {
                 ) : (
                   <>
                     <Wallet className="w-4 h-4 mr-2" />
-                    Connect Wallet
+                    Sign in
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 )}
@@ -335,14 +316,14 @@ const Landing = () => {
                 <a href="#testimonials" className="text-muted-foreground hover:text-primary transition-colors">Testimonials</a>
                 <a href="#contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</a>
                 <div className="flex flex-col space-y-2 pt-4">
-                  <Button
+                  {/* <Button
                     variant="ghost"
                     onClick={handleGetStarted}
                     disabled={isLoading || isLoggingIn}
                   >
                     <LogIn className="w-4 h-4 mr-2" />
                     Sign In
-                  </Button>
+                  </Button> */}
                   <Button
                     onClick={handleGetStarted}
                     className="btn-press"
@@ -361,7 +342,7 @@ const Landing = () => {
                     ) : (
                       <>
                         <Wallet className="w-4 h-4 mr-2" />
-                        Connect Wallet
+                        Sign in
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </>
                     )}
@@ -411,7 +392,7 @@ const Landing = () => {
                 ) : (
                   <>
                     <Wallet className="w-5 h-5 mr-2" />
-                    Connect & Start Earning
+                    Join & Start Earning
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </>
                 )}
@@ -479,7 +460,7 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {pricingPlans.map((plan, index) => (
               <Card
                 key={index}
