@@ -1,13 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_CONFIG } from '../config/index.js';
-
-// Create Supabase client - will work with anon key for now but service key is recommended
-const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.serviceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+import { supabase } from '../config/supabase.js';
 
 export { supabase };
 

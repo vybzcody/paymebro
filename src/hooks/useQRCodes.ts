@@ -2,28 +2,28 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useWeb3Auth } from '@/contexts/Web3AuthContext'
 
-export interface PaymentLink {
+export interface QRCode {
   id: string
   user_id: string
   title: string
-  description?: string
   amount: number
   currency: string
-  reference: string
+  qr_code_url: string
   payment_url: string
+  reference: string
   payment_count: number
   total_collected: number
   is_active: boolean
   created_at: string
 }
 
-export const usePaymentLinks = () => {
-  const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>([])
+export const useQRCodes = () => {
+  const [qrCodes, setQRCodes] = useState<QRCode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user, publicKey } = useWeb3Auth()
 
-  const fetchPaymentLinks = async () => {
+  const fetchQRCodes = async () => {
     const walletAddress = user?.walletAddress || publicKey?.toString()
     if (!walletAddress) return
 
@@ -37,18 +37,18 @@ export const usePaymentLinks = () => {
         .single()
 
       if (userError) {
-        setPaymentLinks([])
+        setQRCodes([])
         return
       }
 
       const { data, error } = await supabase
-        .from('payment_links')
+        .from('qr_codes')
         .select('*')
         .eq('user_id', userData.id)
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setPaymentLinks(data || [])
+      setQRCodes(data || [])
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -56,37 +56,43 @@ export const usePaymentLinks = () => {
     }
   }
 
-  const createPaymentLink = async (linkData: {
+  const createQRCode = async (qrData: {
     title: string
-    description?: string
     amount: number
     currency?: string
   }) => {
     const walletAddress = user?.walletAddress || publicKey?.toString()
     if (!walletAddress) throw new Error('Wallet not connected')
 
+    console.log('Creating QR with data:', qrData)
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}/api/payment-links/create`, {
+      const requestBody = {
+        walletAddress,
+        title: qrData.title,
+        amount: qrData.amount,
+        currency: qrData.currency || 'USDC'
+      }
+      
+      console.log('Request body:', requestBody)
+
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}/api/qr/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          walletAddress,
-          title: linkData.title,
-          description: linkData.description,
-          amount: linkData.amount,
-          currency: linkData.currency || 'USDC'
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to create payment link')
+        throw new Error(error.error || 'Failed to create QR code')
       }
 
       const data = await response.json()
-      setPaymentLinks(prev => [data, ...prev])
+      console.log('QR creation response:', data)
+      
+      setQRCodes(prev => [data, ...prev])
       return data
     } catch (err: any) {
       setError(err.message)
@@ -94,16 +100,16 @@ export const usePaymentLinks = () => {
     }
   }
 
-  const deletePaymentLink = async (id: string) => {
+  const deleteQRCode = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('payment_links')
+        .from('qr_codes')
         .delete()
         .eq('id', id)
 
       if (error) throw error
       
-      setPaymentLinks(prev => prev.filter(link => link.id !== id))
+      setQRCodes(prev => prev.filter(qr => qr.id !== id))
     } catch (err: any) {
       setError(err.message)
       throw err
@@ -113,16 +119,16 @@ export const usePaymentLinks = () => {
   useEffect(() => {
     const walletAddress = user?.walletAddress || publicKey?.toString()
     if (walletAddress) {
-      fetchPaymentLinks()
+      fetchQRCodes()
     }
   }, [user?.walletAddress, publicKey])
 
   return {
-    paymentLinks,
+    qrCodes,
     loading,
     error,
-    createPaymentLink,
-    deletePaymentLink,
-    refetch: fetchPaymentLinks
+    createQRCode,
+    deleteQRCode,
+    refetch: fetchQRCodes
   }
 }

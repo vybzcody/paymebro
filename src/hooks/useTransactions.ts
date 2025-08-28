@@ -10,35 +10,22 @@ export const useTransactions = () => {
 
   // Fetch transactions
   const fetchTransactions = async () => {
-    if (!user?.walletAddress && !publicKey) {
-      console.log('No wallet address available for fetching transactions');
+    console.log('fetchTransactions called with user:', user);
+    
+    if (!user?.id) {
+      console.log('No user ID available for fetching transactions. User object:', user);
+      setTransactions([]);
       return;
     }
 
-    const walletAddress = user?.walletAddress || publicKey?.toString();
-    if (!walletAddress) return;
-
     try {
       setLoading(true)
-      console.log('Fetching transactions for wallet:', walletAddress);
+      console.log('Fetching transactions for user ID:', user.id);
       
-      // First get user by wallet address, then get transactions
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('wallet_address', walletAddress)
-        .single();
-
-      if (userError) {
-        console.log('User not found in database:', userError);
-        setTransactions([]);
-        return;
-      }
-
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
-        .eq('user_id', userData.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50)
 
@@ -89,7 +76,7 @@ export const useTransactions = () => {
     return () => {
       subscription.unsubscribe()
     }
-  }, [user?.walletAddress, publicKey])
+  }, [user?.id])
 
   return {
     transactions,

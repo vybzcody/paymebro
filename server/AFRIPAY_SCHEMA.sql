@@ -673,3 +673,28 @@ GRANT SELECT ON payment_links TO anon;
 GRANT SELECT ON invoices TO anon;
 GRANT INSERT ON transactions TO anon;
 GRANT INSERT ON email_logs TO anon;
+-- Function to increment QR code payment count
+CREATE OR REPLACE FUNCTION increment_qr_payment_count(qr_id UUID, payment_amount DECIMAL)
+RETURNS void AS $$
+BEGIN
+    UPDATE qr_codes 
+    SET 
+        payment_count = payment_count + 1,
+        total_collected = total_collected + payment_amount,
+        updated_at = NOW()
+    WHERE id = qr_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to increment payment link count
+CREATE OR REPLACE FUNCTION increment_payment_link_count(link_id UUID, payment_amount DECIMAL)
+RETURNS void AS $$
+BEGIN
+    UPDATE payment_links 
+    SET 
+        payment_count = payment_count + 1,
+        total_collected = total_collected + payment_amount,
+        updated_at = NOW()
+    WHERE id = link_id;
+END;
+$$ LANGUAGE plpgsql;
