@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, CreditCard, Calendar, BarChart3 } from "lucide-react";
 import { RevenueMetrics as RevenueMetricsType } from "@/hooks/useAnalytics";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface RevenueMetricsProps {
   metrics: RevenueMetricsType;
@@ -8,13 +10,25 @@ interface RevenueMetricsProps {
 }
 
 export const RevenueMetrics = ({ metrics, loading }: RevenueMetricsProps) => {
-  const formatCurrency = (amount: number, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency === 'SOL' ? 'USD' : currency,
-      minimumFractionDigits: currency === 'SOL' ? 4 : 2,
-    }).format(amount);
-  };
+  const { formatAmount } = useCurrency();
+  const [formattedRevenue, setFormattedRevenue] = useState('$0.00');
+  const [formattedMRR, setFormattedMRR] = useState('$0.00');
+  const [formattedARR, setFormattedARR] = useState('$0.00');
+
+  useEffect(() => {
+    const updateFormattedAmounts = async () => {
+      // Assuming metrics are mixed SOL/USDC, we'll format as USDC for now
+      const revenue = await formatAmount(metrics.totalRevenue, 'USDC');
+      const mrr = await formatAmount(metrics.mrr, 'USDC');
+      const arr = await formatAmount(metrics.arr, 'USDC');
+      
+      setFormattedRevenue(revenue);
+      setFormattedMRR(mrr);
+      setFormattedARR(arr);
+    };
+
+    updateFormattedAmounts();
+  }, [metrics, formatAmount]);
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
@@ -47,7 +61,7 @@ export const RevenueMetrics = ({ metrics, loading }: RevenueMetricsProps) => {
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(metrics.totalRevenue)}</div>
+          <div className="text-2xl font-bold">{formattedRevenue}</div>
           <div className="flex items-center text-xs text-muted-foreground">
             {metrics.growth >= 0 ? (
               <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
@@ -78,7 +92,7 @@ export const RevenueMetrics = ({ metrics, loading }: RevenueMetricsProps) => {
           <Calendar className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(metrics.mrr)}</div>
+          <div className="text-2xl font-bold">{formattedMRR}</div>
           <p className="text-xs text-muted-foreground">
             Monthly Recurring Revenue
           </p>
@@ -91,7 +105,7 @@ export const RevenueMetrics = ({ metrics, loading }: RevenueMetricsProps) => {
           <BarChart3 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(metrics.arr)}</div>
+          <div className="text-2xl font-bold">{formattedARR}</div>
           <p className="text-xs text-muted-foreground">
             Annual Recurring Revenue
           </p>
