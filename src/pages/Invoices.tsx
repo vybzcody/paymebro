@@ -1,11 +1,18 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, DollarSign, Plus, Mail, Send } from "lucide-react";
 import { EmptyState, TransactionSkeleton } from "@/components/EmptyStates";
+import { EmailInvoiceModal } from "@/components/EmailInvoiceModal";
 import { useInvoices } from "@/hooks/useInvoices";
+import { invoiceService } from "@/services/invoiceService";
+import { toast } from 'sonner';
 
 const Invoices = () => {
-  const { invoices, loading } = useInvoices();
+  const { invoices, loading, refetch } = useInvoices();
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [sendingInvoice, setSendingInvoice] = useState<string | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -17,13 +24,37 @@ const Invoices = () => {
     }
   };
 
+  const handleSendInvoice = async (invoiceId: string, customerEmail: string) => {
+    setSendingInvoice(invoiceId);
+    try {
+      await invoiceService.sendInvoice(invoiceId);
+      toast.success(`Invoice sent to ${customerEmail}`);
+      refetch(); // Refresh the list
+    } catch (error: any) {
+      toast.error('Failed to send invoice', {
+        description: error.message
+      });
+    } finally {
+      setSendingInvoice(null);
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'No due date';
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
-          <p className="text-gray-500">Create and manage invoices</p>
+          <p className="text-gray-500">Create and manage email invoices</p>
         </div>
+        <Button onClick={() => setShowEmailModal(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Email Invoice
+        </Button>
       </div>
 
       {loading ? (
@@ -50,15 +81,37 @@ const Invoices = () => {
                       <p className="font-medium">{invoice.customer_name}</p>
                       <p className="text-sm text-gray-500">{invoice.customer_email}</p>
                       <p className="text-xs text-gray-400">{invoice.description}</p>
+                      <p className="text-xs text-gray-400">
+                        Created: {new Date(invoice.created_at).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
                   
-                  <div className="text-right space-y-1">
+                  <div className="text-right space-y-2">
                     <p className="font-semibold">${invoice.amount} {invoice.currency}</p>
-                    <p className="text-sm text-gray-500">Due: {invoice.due_date}</p>
-                    <Badge variant={getStatusColor(invoice.status)}>
-                      {invoice.status}
-                    </Badge>
+                    <p className="text-sm text-gray-500">Due: {formatDate(invoice.due_date)}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={getStatusColor(invoice.status)}>
+                        {invoice.status}
+                      </Badge>
+                      {invoice.status === 'draft' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSendInvoice(invoice.id, invoice.customer_email)}
+                          disabled={sendingInvoice === invoice.id}
+                        >
+                          {sendingInvoice === invoice.id ? (
+                            'Sending...'
+                          ) : (
+                            <>
+                              <Send className="h-3 w-3 mr-1" />
+                              Send
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -66,6 +119,12 @@ const Invoices = () => {
           </CardContent>
         </Card>
       )}
+
+      <EmailInvoiceModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        onSuccess={refetch}
+      />
     </div>
   );
 };
