@@ -3,16 +3,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Link, DollarSign, Search, Copy } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+import { Link, DollarSign, Search, Copy, Eye, Trash2 } from "lucide-react";
 import { EmptyState, TransactionSkeleton } from "@/components/EmptyStates";
 import { usePaymentLinks } from "@/hooks/usePaymentLinks";
 import { useState } from "react";
 import { toast } from "sonner";
 
-const Payments = () => {
-  const { paymentLinks, loading } = usePaymentLinks();
+const PaymentLinks = () => {
+  const { paymentLinks, loading, deletePaymentLink } = usePaymentLinks();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedLink, setSelectedLink] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ open: false, linkId: '', linkTitle: '' });
 
   const filteredLinks = paymentLinks.filter(link => {
     const matchesSearch = link.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -28,6 +32,19 @@ const Payments = () => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard!');
+  };
+
+  const handleDeleteClick = (id: string, title: string) => {
+    setDeleteModal({ open: true, linkId: id, linkTitle: title });
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deletePaymentLink(deleteModal.linkId);
+      toast.success('Payment link deleted');
+    } catch (error) {
+      toast.error('Failed to delete payment link');
+    }
   };
 
   return (
@@ -102,12 +119,61 @@ const Payments = () => {
                       <Badge variant={link.is_active ? 'default' : 'secondary'}>
                         {link.is_active ? 'Active' : 'Inactive'}
                       </Badge>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="outline" onClick={() => setSelectedLink(link)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Payment Link Details</DialogTitle>
+                          </DialogHeader>
+                          {selectedLink && (
+                            <div className="space-y-4">
+                              <div>
+                                <label className="text-sm font-medium">Title</label>
+                                <p className="text-sm text-gray-600">{selectedLink.title}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium">Amount</label>
+                                <p className="text-sm text-gray-600">${selectedLink.amount} {selectedLink.currency}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium">Reference</label>
+                                <p className="text-sm text-gray-600">{selectedLink.reference}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium">Payment URL</label>
+                                <div className="flex items-center space-x-2">
+                                  <p className="text-sm text-gray-600 truncate flex-1">{selectedLink.payment_url}</p>
+                                  <Button size="sm" variant="outline" onClick={() => copyToClipboard(selectedLink.payment_url)}>
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium">Stats</label>
+                                <p className="text-sm text-gray-600">{selectedLink.payment_count} payments • ${selectedLink.total_collected} collected</p>
+                              </div>
+                            </div>
+                          )}
+                        </DialogContent>
+                      </Dialog>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => copyToClipboard(link.payment_url)}
                       >
                         <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteClick(link.id, link.title)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -117,8 +183,19 @@ const Payments = () => {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmationModal
+        open={deleteModal.open}
+        onOpenChange={(open) => setDeleteModal(prev => ({ ...prev, open }))}
+        title="Delete Payment Link"
+        description={`Are you sure you want to delete "${deleteModal.linkTitle}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 };
 
-export default Payments;
+export default PaymentLinks;

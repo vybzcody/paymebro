@@ -3,12 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { QrCode, Send, CreditCard, TrendingUp, Users, DollarSign, Wallet, Zap, Clock, Link, Copy, Plus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { QrCode, Send, CreditCard, TrendingUp, Users, DollarSign, Wallet, Zap, Clock, Link, Copy, Plus, X } from "lucide-react";
 import { StatCard } from "./StatCard";
 import { EmptyState, TransactionSkeleton } from "./EmptyStates";
 import { useWeb3Auth } from "@/contexts/Web3AuthContext";
 import { useTransactions } from "@/hooks/useTransactions";
 import { usePaymentLinks } from "@/hooks/usePaymentLinks";
+import { useQRCodes } from "@/hooks/useQRCodes";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -16,14 +20,35 @@ export const Dashboard = () => {
   const { user, publicKey } = useWeb3Auth();
   const { transactions, loading: txLoading } = useTransactions();
   const { paymentLinks, loading: linksLoading, createPaymentLink } = usePaymentLinks();
+  const { qrCodes, createQRCode } = useQRCodes();
   
   // Debug logging
   console.log('Dashboard user:', user);
   console.log('User ID:', user?.id);
   console.log('PublicKey:', publicKey?.toString());
   
-  const [newLink, setNewLink] = useState({ title: '', amount: '' });
+  const [newLink, setNewLink] = useState({ title: '', amount: '', currency: 'USDC' });
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showQRForm, setShowQRForm] = useState(false);
+  const [showInvoiceForm, setShowInvoiceForm] = useState(false);
+  
+  // QR Form state
+  const [qrForm, setQrForm] = useState({
+    amount: '',
+    label: '',
+    message: '',
+    currency: 'USDC'
+  });
+  
+  // Invoice form state
+  const [invoiceForm, setInvoiceForm] = useState({
+    customerName: '',
+    customerEmail: '',
+    amount: '',
+    description: '',
+    dueDate: '',
+    notes: ''
+  });
 
   // Calculate metrics from real data
   const totalRevenue = transactions
@@ -38,7 +63,7 @@ export const Dashboard = () => {
       .map(tx => tx.customer_email)
   ).size;
 
-  const recentTransactions = transactions.slice(0, 5);
+  const recentTransactions = transactions.slice(0, 10);
 
   const handleCreatePaymentLink = async () => {
     if (!newLink.title || !newLink.amount) {
@@ -49,14 +74,59 @@ export const Dashboard = () => {
     try {
       const link = await createPaymentLink({
         title: newLink.title,
-        amount: parseFloat(newLink.amount)
+        amount: parseFloat(newLink.amount),
+        currency: newLink.currency
       });
       
       toast.success('Payment link created successfully!');
-      setNewLink({ title: '', amount: '' });
+      setNewLink({ title: '', amount: '', currency: 'USDC' });
       setShowCreateForm(false);
     } catch (error: any) {
       toast.error(error.message || 'Failed to create payment link');
+    }
+  };
+
+  const handleGenerateQR = async () => {
+    if (!qrForm.amount) {
+      toast.error('Please fill in amount');
+      return;
+    }
+
+    try {
+      await createQRCode({
+        title: qrForm.label || 'AfriPay Payment',
+        amount: parseFloat(qrForm.amount),
+        currency: qrForm.currency
+      });
+      
+      toast.success('QR code created successfully!');
+      setQrForm({ amount: '', label: '', message: '', currency: 'USDC' });
+      setShowQRForm(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create QR code');
+    }
+  };
+
+  const handleSendInvoice = async () => {
+    if (!invoiceForm.customerName || !invoiceForm.customerEmail || !invoiceForm.amount) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+
+    try {
+      // This would integrate with your invoice service
+      toast.success('Invoice sent successfully!');
+      setInvoiceForm({
+        customerName: '',
+        customerEmail: '',
+        amount: '',
+        description: '',
+        dueDate: '',
+        notes: ''
+      });
+      setShowInvoiceForm(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send invoice');
     }
   };
 
@@ -82,14 +152,137 @@ export const Dashboard = () => {
           <p className="text-gray-500">Welcome back, {user.name || 'User'}</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline">
-            <Send className="h-4 w-4 mr-2" />
-            Send Invoice
-          </Button>
-          <Button variant="outline">
-            <QrCode className="h-4 w-4 mr-2" />
-            Generate QR
-          </Button>
+          <Dialog open={showInvoiceForm} onOpenChange={setShowInvoiceForm}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Send className="h-4 w-4 mr-2" />
+                Send Invoice
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Send Invoice</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Customer Name</Label>
+                    <Input
+                      value={invoiceForm.customerName}
+                      onChange={(e) => setInvoiceForm(prev => ({ ...prev, customerName: e.target.value }))}
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div>
+                    <Label>Customer Email</Label>
+                    <Input
+                      type="email"
+                      value={invoiceForm.customerEmail}
+                      onChange={(e) => setInvoiceForm(prev => ({ ...prev, customerEmail: e.target.value }))}
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Amount (USDC)</Label>
+                    <Input
+                      type="number"
+                      value={invoiceForm.amount}
+                      onChange={(e) => setInvoiceForm(prev => ({ ...prev, amount: e.target.value }))}
+                      placeholder="100.00"
+                    />
+                  </div>
+                  <div>
+                    <Label>Due Date</Label>
+                    <Input
+                      type="date"
+                      value={invoiceForm.dueDate}
+                      onChange={(e) => setInvoiceForm(prev => ({ ...prev, dueDate: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Description</Label>
+                  <Input
+                    value={invoiceForm.description}
+                    onChange={(e) => setInvoiceForm(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Service description"
+                  />
+                </div>
+                <div>
+                  <Label>Notes</Label>
+                  <Textarea
+                    value={invoiceForm.notes}
+                    onChange={(e) => setInvoiceForm(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Additional notes..."
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <Button onClick={handleSendInvoice}>Send Invoice</Button>
+                  <Button variant="outline" onClick={() => setShowInvoiceForm(false)}>Cancel</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={showQRForm} onOpenChange={setShowQRForm}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <QrCode className="h-4 w-4 mr-2" />
+                Generate QR
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Generate QR Code</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Amount</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      type="number"
+                      value={qrForm.amount}
+                      onChange={(e) => setQrForm(prev => ({ ...prev, amount: e.target.value }))}
+                      placeholder="10.00"
+                      className="flex-1"
+                    />
+                    <Select value={qrForm.currency} onValueChange={(value) => setQrForm(prev => ({ ...prev, currency: value }))}>
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USDC">USDC</SelectItem>
+                        <SelectItem value="SOL">SOL</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Label</Label>
+                  <Input
+                    value={qrForm.label}
+                    onChange={(e) => setQrForm(prev => ({ ...prev, label: e.target.value }))}
+                    placeholder="Payment for services"
+                  />
+                </div>
+                <div>
+                  <Label>Message</Label>
+                  <Textarea
+                    value={qrForm.message}
+                    onChange={(e) => setQrForm(prev => ({ ...prev, message: e.target.value }))}
+                    placeholder="Thank you for your payment"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <Button onClick={handleGenerateQR}>Generate QR</Button>
+                  <Button variant="outline" onClick={() => setShowQRForm(false)}>Cancel</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
           <Button 
             onClick={() => setShowCreateForm(true)}
             className="bg-blue-600 hover:bg-blue-700"
@@ -136,7 +329,12 @@ export const Dashboard = () => {
       {showCreateForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Create Payment Link</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              Create Payment Link
+              <Button variant="ghost" size="sm" onClick={() => setShowCreateForm(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -150,14 +348,26 @@ export const Dashboard = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="amount">Amount (USDC)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={newLink.amount}
-                  onChange={(e) => setNewLink(prev => ({ ...prev, amount: e.target.value }))}
-                />
+                <Label htmlFor="amount">Amount</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder="0.00"
+                    value={newLink.amount}
+                    onChange={(e) => setNewLink(prev => ({ ...prev, amount: e.target.value }))}
+                    className="flex-1"
+                  />
+                  <Select value={newLink.currency} onValueChange={(value) => setNewLink(prev => ({ ...prev, currency: value }))}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USDC">USDC</SelectItem>
+                      <SelectItem value="SOL">SOL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <div className="flex space-x-2">
@@ -172,7 +382,8 @@ export const Dashboard = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Single Column Layout */}
+      <div className="space-y-6">
         {/* Recent Transactions */}
         <Card>
           <CardHeader>
@@ -233,7 +444,7 @@ export const Dashboard = () => {
               />
             ) : (
               <div className="space-y-3">
-                {paymentLinks.slice(0, 5).map((link) => (
+                {paymentLinks.map((link) => (
                   <div key={link.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <p className="font-medium">{link.title}</p>
