@@ -124,8 +124,36 @@ export const Web3AuthProvider: React.FC<Web3AuthProviderProps> = ({ children }) 
         setPublicKey(pubKey);
         console.log('Account connected:', accounts[0]);
 
-        // Set user info
+        // Set user info and sync with backend
+        console.log('Setting initial user info:', userInfo);
         setUser(userInfo);
+        
+        // Sync user with backend to get UUID
+        try {
+          const { syncUserWithBackend } = await import('@/services/businessService');
+          const backendUser = await syncUserWithBackend(userInfo, accounts[0]);
+          console.log('User synced with backend:', backendUser);
+          
+          // Update user with backend data including UUID
+          const updatedUser = {
+            ...userInfo,
+            id: backendUser.id, // UUID from backend
+            walletAddress: backendUser.walletAddress
+          };
+          console.log('Setting updated user with ID:', updatedUser);
+          setUser(updatedUser);
+        } catch (syncError) {
+          console.error('Failed to sync user with backend:', syncError);
+          // Continue with Web3Auth user data only - generate a UUID for fallback
+          const fallbackId = crypto.randomUUID(); // Generate proper UUID
+          const fallbackUser = {
+            ...userInfo,
+            id: fallbackId,
+            walletAddress: accounts[0]
+          };
+          console.log('Using fallback user with generated UUID:', fallbackUser);
+          setUser(fallbackUser);
+        }
       }
     } catch (err: any) {
       console.error('Login error:', err);
