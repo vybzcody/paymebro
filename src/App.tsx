@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Web3AuthProvider } from './contexts/Web3AuthContext';
+import { CurrencyProvider } from './contexts/CurrencyContext';
 import { useAuth } from './hooks/useAuth';
 import { Suspense, lazy } from 'react';
 
@@ -159,18 +160,20 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <Web3AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="min-h-screen bg-background">
-            <AppRoutes />
-            <Suspense fallback={null}>
-              <RealtimeNotifications />
-            </Suspense>
-          </div>
-        </BrowserRouter>
-      </TooltipProvider>
+      <CurrencyProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="min-h-screen bg-background">
+              <AppRoutes />
+              <Suspense fallback={null}>
+                <RealtimeNotifications />
+              </Suspense>
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
+      </CurrencyProvider>
     </Web3AuthProvider>
   </QueryClientProvider>
 );

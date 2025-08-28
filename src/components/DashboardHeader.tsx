@@ -5,6 +5,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { DarkModeToggle } from "./DarkModeToggle";
+import { CurrencySwitcher } from "./CurrencySwitcher";
 import {
   Sheet,
   SheetContent,
@@ -106,6 +107,7 @@ export const DashboardHeader = () => {
 
           {/* Actions */}
           <div className="flex items-center space-x-3">
+            <CurrencySwitcher />
             <DarkModeToggle />
             
             <Button variant="ghost" size="sm" className="relative" asChild>
