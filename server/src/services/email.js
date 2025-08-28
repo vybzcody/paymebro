@@ -399,6 +399,9 @@ export class EmailService {
   }) {
     const formattedDueDate = dueDate ? new Date(dueDate).toLocaleDateString() : 'No due date';
     
+    // Generate QR code URL using a QR code API service
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(paymentUrl)}`;
+    
     return `
     <!DOCTYPE html>
     <html>
@@ -415,18 +418,26 @@ export class EmailService {
         .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; }
         .detail-row { display: flex; justify-content: space-between; margin: 10px 0; }
         .label { font-weight: bold; }
+        .qr-section { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; border: 2px dashed #667eea; }
+        .qr-code { margin: 15px 0; }
+        .payment-options { display: flex; justify-content: space-around; align-items: center; margin: 30px 0; flex-wrap: wrap; }
+        .payment-option { text-align: center; margin: 10px; }
+        @media (max-width: 600px) {
+          .payment-options { flex-direction: column; }
+          .payment-option { margin: 15px 0; }
+        }
       </style>
     </head>
     <body>
       <div class="header">
-        <h1>📄 Invoice from ${merchantName}</h1>
+        <h1>📄 Invoice from ${merchantName || 'AfriPay Merchant'}</h1>
         <p>Invoice #${invoiceNumber}</p>
       </div>
       
       <div class="content">
         <p>Hello ${customerName || 'Valued Customer'},</p>
         
-        <p>You have received an invoice from <strong>${merchantName}</strong>. Please review the details below:</p>
+        <p>You have received an invoice from <strong>${merchantName || 'AfriPay Merchant'}</strong>. Please review the details below:</p>
         
         <div class="invoice-details">
           <div class="detail-row">
@@ -457,8 +468,29 @@ export class EmailService {
           Total: ${totalAmount} ${currency}
         </div>
         
-        <div style="text-align: center;">
-          <a href="${paymentUrl}" class="button">💳 Pay Now with Solana</a>
+        <div class="payment-options">
+          <div class="payment-option">
+            <h3>💻 Pay from Browser</h3>
+            <a href="${paymentUrl}" class="button">💳 Pay Now with Solana</a>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+              Click to open payment page
+            </p>
+          </div>
+          
+          <div class="payment-option">
+            <h3>📱 Scan QR Code</h3>
+            <div class="qr-section">
+              <p style="margin: 0 0 10px 0; font-weight: bold; color: #667eea;">
+                Scan with your phone camera
+              </p>
+              <div class="qr-code">
+                <img src="${qrCodeUrl}" alt="Payment QR Code" style="max-width: 200px; height: auto;" />
+              </div>
+              <p style="font-size: 12px; color: #666; margin: 10px 0 0 0;">
+                Opens payment page on your mobile device
+              </p>
+            </div>
+          </div>
         </div>
         
         <p><strong>Why Solana Pay?</strong></p>
@@ -468,12 +500,24 @@ export class EmailService {
           <li>💰 Low transaction fees</li>
           <li>🌍 Global accessibility</li>
         </ul>
+        
+        <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; font-size: 14px;">
+            <strong>💡 Payment Instructions:</strong><br>
+            • <strong>Desktop/Laptop:</strong> Click the "Pay Now" button above<br>
+            • <strong>Mobile:</strong> Scan the QR code with your phone camera<br>
+            • <strong>Wallet Required:</strong> You'll need a Solana wallet (Phantom, Solflare, etc.)
+          </p>
+        </div>
       </div>
       
       <div class="footer">
         <p><strong>AfriPay</strong> - Secure Solana Payments</p>
         <p>This invoice was sent via AfriPay's secure payment platform.</p>
-        <p>Questions? Contact ${merchantName} or support@afripay.com</p>
+        <p>Questions? Contact ${merchantName || 'the merchant'} or support@afripay.com</p>
+        <p style="font-size: 12px; color: #999; margin-top: 15px;">
+          Payment URL: <a href="${paymentUrl}" style="color: #667eea;">${paymentUrl}</a>
+        </p>
       </div>
     </body>
     </html>

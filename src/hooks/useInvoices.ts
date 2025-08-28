@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useWeb3Auth } from '@/contexts/Web3AuthContext'
+import { useAuth } from './useAuth'
 
 export interface Invoice {
   id: string
@@ -14,36 +14,27 @@ export interface Invoice {
   notes?: string
   status: 'draft' | 'sent' | 'paid' | 'overdue'
   created_at: string
+  sent_at?: string
+  paid_at?: string
 }
 
 export const useInvoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user, publicKey } = useWeb3Auth()
+  const { user } = useAuth()
 
   const fetchInvoices = async () => {
-    const walletAddress = user?.walletAddress || publicKey?.toString()
-    if (!walletAddress) return
+    if (!user?.userId && !user?.id?.match(/^[0-9a-f-]{36}$/i)) return
 
     try {
       setLoading(true)
+      const userId = user.userId || user.id
       
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('wallet_address', walletAddress)
-        .single()
-
-      if (userError) {
-        setInvoices([])
-        return
-      }
-
       const { data, error } = await supabase
         .from('invoices')
         .select('*')
-        .eq('user_id', userData.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -57,60 +48,44 @@ export const useInvoices = () => {
 
   // Real-time subscription
   useEffect(() => {
-    const walletAddress = user?.walletAddress || publicKey?.toString()
-    if (!walletAddress) return
+    if (!user?.userId && !user?.id?.match(/^[0-9a-f-]{36}$/i)) return
 
+    const userId = user.userId || user.id
     fetchInvoices()
 
-    // Get user ID for subscription
-    const setupSubscription = async () => {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('id')
-        .eq('wallet_address', walletAddress)
-        .single()
-
-      if (!userData) return
-
-      // Set up real-time subscription
-      const subscription = supabase
-        .channel('invoices')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'invoices',
-            filter: `user_id=eq.${userData.id}`
-          },
-          (payload) => {
-            console.log('🔄 Invoice update:', payload)
-            
-            if (payload.eventType === 'INSERT') {
-              setInvoices(prev => [payload.new as Invoice, ...prev])
-            } else if (payload.eventType === 'UPDATE') {
-              setInvoices(prev => 
-                prev.map(invoice => 
-                  invoice.id === payload.new.id ? payload.new as Invoice : invoice
-                )
+    // Set up real-time subscription
+    const subscription = supabase
+      .channel(`invoices-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'invoices',
+          filter: `user_id=eq.${userId}`
+        },
+        (payload) => {
+          console.log('🔄 Invoice update:', payload)
+          
+          if (payload.eventType === 'INSERT') {
+            setInvoices(prev => [payload.new as Invoice, ...prev])
+          } else if (payload.eventType === 'UPDATE') {
+            setInvoices(prev => 
+              prev.map(invoice => 
+                invoice.id === payload.new.id ? payload.new as Invoice : invoice
               )
-            } else if (payload.eventType === 'DELETE') {
-              setInvoices(prev => prev.filter(invoice => invoice.id !== payload.old.id))
-            }
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setInvoices(prev => prev.filter(invoice => invoice.id !== payload.old.id))
           }
-        )
-        .subscribe()
+        }
+      )
+      .subscribe()
 
-      return () => {
-        subscription.unsubscribe()
-      }
-    }
-
-    const cleanup = setupSubscription()
     return () => {
-      cleanup.then(fn => fn?.())
+      subscription.unsubscribe()
     }
-  }, [user?.walletAddress, publicKey])
+  }, [user?.userId, user?.id])
 
   return {
     invoices,
