@@ -10,6 +10,7 @@ import { SubscriptionModal } from '@/components/SubscriptionModal';
 import { GroupPaymentModal } from '@/components/GroupPaymentModal';
 import { PaymentTemplates } from '@/components/PaymentTemplates';
 import { PaymentWidgets } from '@/components/PaymentWidgets';
+import { FeeBreakdown } from '@/components/FeeBreakdown';
 import { SuccessAnimation } from '@/components/SuccessAnimation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -155,8 +156,14 @@ export const Dashboard = () => {
       </Card>
 
       {/* Secondary Analytics */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <CurrencyBreakdown metrics={metrics} loading={loading} />
+        
+        <FeeBreakdown 
+          merchantRevenue={metrics.totalRevenue}
+          platformFees={metrics.platformRevenue || 0}
+          totalTransactions={metrics.totalTransactions}
+        />
         
         <Card>
           <CardHeader>
