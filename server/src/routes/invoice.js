@@ -11,10 +11,7 @@ const invoiceService = new InvoiceService();
  * Create a new invoice
  */
 router.post('/', [
-  body('merchantId').notEmpty().withMessage('Merchant ID is required'),
-  body('merchantName').notEmpty().withMessage('Merchant name is required'),
-  body('merchantEmail').isEmail().withMessage('Valid merchant email is required'),
-  body('merchantWallet').notEmpty().withMessage('Merchant wallet is required'),
+  body('userId').isUUID().withMessage('Valid user ID is required'),
   body('customerName').notEmpty().withMessage('Customer name is required'),
   body('customerEmail').isEmail().withMessage('Valid customer email is required'),
   body('amount').isFloat({ min: 0.01 }).withMessage('Amount must be greater than 0'),
@@ -37,23 +34,19 @@ router.post('/', [
     }
 
     const {
-      merchantId,
-      merchantName,
-      merchantEmail,
-      merchantWallet,
+      userId,
       customerName,
       customerEmail,
       amount,
       currency = 'USDC',
       description,
-      lineItems = [],
       dueDate,
       notes,
       sendEmail = false
     } = req.body;
 
     console.log('📄 Creating invoice:', {
-      merchantId,
+      userId,
       customerEmail,
       amount,
       currency,
@@ -61,16 +54,12 @@ router.post('/', [
     });
 
     const result = await invoiceService.createInvoice({
-      merchantId,
-      merchantName,
-      merchantEmail,
-      merchantWallet,
+      userId,
       customerName,
       customerEmail,
       amount,
       currency,
       description,
-      lineItems,
       dueDate,
       notes,
       sendEmail
@@ -103,7 +92,7 @@ router.post('/', [
  * Get invoices for a merchant
  */
 router.get('/', [
-  query('merchantId').notEmpty().withMessage('Merchant ID is required'),
+  query('userId').isUUID().withMessage('Valid user ID is required'),
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
   query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative'),
   query('status').optional().isIn(['draft', 'sent', 'viewed', 'paid', 'expired', 'cancelled']).withMessage('Invalid status')
@@ -120,15 +109,15 @@ router.get('/', [
     }
 
     const {
-      merchantId,
+      userId,
       limit = 50,
       offset = 0,
       status
     } = req.query;
 
-    console.log('📄 Fetching invoices for merchant:', merchantId);
+    console.log('📄 Fetching invoices for user:', userId);
 
-    const result = await invoiceService.getInvoices(merchantId, {
+    const result = await invoiceService.getInvoices(userId, {
       limit: parseInt(limit),
       offset: parseInt(offset),
       status
