@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    https: false, // Set to true if you need HTTPS for production testing
+    https: false,
     cors: true,
     headers: {
       'Cross-Origin-Embedder-Policy': 'unsafe-none',
@@ -27,10 +27,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      buffer: "buffer",
     },
   },
   optimizeDeps: {
-    include: ['@web3auth/modal', '@web3auth/base', '@web3auth/solana-provider'],
+    include: ['buffer', '@web3auth/modal', '@web3auth/base', '@web3auth/solana-provider'],
     exclude: ['@web3auth/modal-react-hooks']
   },
   build: {
