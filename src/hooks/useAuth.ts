@@ -3,6 +3,7 @@ import { useWeb3Auth } from '../contexts/Web3AuthContext';
 
 interface AuthUser {
   id: string;
+  userId?: string;
   email?: string;
   name?: string;
   profileImage?: string;
@@ -26,12 +27,14 @@ export const useAuth = () => {
   // Sync Web3Auth user with our auth state
   useEffect(() => {
     if (web3User && publicKey) {
+      // Use the Web3Auth user directly (it has the UUID from backend sync)
       setUser({
-        id: web3User.verifierId || web3User.id || publicKey.toString(),
+        id: web3User.id, // This should be the UUID from backend
+        userId: web3User.userId, // Backup UUID field
         email: web3User.email,
         name: web3User.name,
         profileImage: web3User.profileImage,
-        walletAddress: publicKey.toString(),
+        walletAddress: web3User.walletAddress || publicKey.toString(),
       });
       setError(null);
     } else {
