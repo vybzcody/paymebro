@@ -107,7 +107,7 @@ export const getPaymentLinks = async (userId: string): Promise<PaymentLink[]> =>
  * Create a new invoice using backend API
  */
 export const createInvoice = async (
-  userId: string,
+  web3authUserId: string, // Web3Auth user ID (string, not UUID)
   invoiceData: {
     merchantName: string;
     merchantEmail: string;
@@ -129,7 +129,7 @@ export const createInvoice = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        merchantId: userId,
+        merchantId: web3authUserId, // Web3Auth user ID
         merchantName: invoiceData.merchantName,
         merchantEmail: invoiceData.merchantEmail,
         merchantWallet: invoiceData.merchantWallet,
@@ -172,9 +172,9 @@ export const createInvoice = async (
 /**
  * Get invoices for user using backend API
  */
-export const getInvoices = async (userId: string): Promise<Invoice[]> => {
+export const getInvoices = async (web3authUserId: string): Promise<Invoice[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/invoices?merchantId=${userId}`);
+    const response = await fetch(`${API_BASE_URL}/api/invoices?merchantId=${web3authUserId}`);
     
     if (!response.ok) {
       const errorData = await response.json();
@@ -197,6 +197,39 @@ export const getInvoices = async (userId: string): Promise<Invoice[]> => {
     }));
   } catch (error) {
     console.error('Error fetching invoices:', error);
+    throw error;
+  }
+};
+
+/**
+ * Handle Web3Auth login - sync user with backend
+ */
+export const syncUserWithBackend = async (web3authUserInfo: any, walletAddress: string): Promise<any> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/user/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        web3authUserId: web3authUserInfo.verifierId || web3authUserInfo.sub,
+        walletAddress,
+        email: web3authUserInfo.email,
+        name: web3authUserInfo.name,
+        avatarUrl: web3authUserInfo.profileImage,
+        loginProvider: web3authUserInfo.typeOfLogin || 'unknown'
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to sync user');
+    }
+
+    const result = await response.json();
+    return result.user;
+  } catch (error) {
+    console.error('Error syncing user with backend:', error);
     throw error;
   }
 };
