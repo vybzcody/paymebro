@@ -6,9 +6,11 @@ import { RevenueMetrics } from '@/components/analytics/RevenueMetrics';
 import { AnalyticsFilters as FiltersComponent } from '@/components/analytics/AnalyticsFilters';
 import { CurrencyBreakdown } from '@/components/analytics/CurrencyBreakdown';
 import { RealtimeDebug } from '@/components/RealtimeDebug';
+import { SubscriptionModal } from '@/components/SubscriptionModal';
+import { GroupPaymentModal } from '@/components/GroupPaymentModal';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, QrCode, Link, FileText, TrendingUp, Zap } from "lucide-react";
+import { Plus, QrCode, Link, FileText, TrendingUp, Zap, Repeat, Users, Mail } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 
 export const Dashboard = () => {
@@ -18,6 +20,9 @@ export const Dashboard = () => {
     currency: 'all',
     status: 'all'
   });
+
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showGroupPaymentModal, setShowGroupPaymentModal] = useState(false);
 
   const { metrics, loading } = useRealtimeAnalytics(filters);
 
@@ -37,11 +42,30 @@ export const Dashboard = () => {
       color: "bg-green-500"
     },
     {
-      title: "New Invoice",
+      title: "Email Invoice",
       description: "Send a professional invoice",
-      icon: FileText,
+      icon: Mail,
       href: "/invoices",
       color: "bg-purple-500"
+    }
+  ];
+
+  const hackathonFeatures = [
+    {
+      title: "Recurring Payments",
+      description: "Set up automated subscriptions",
+      icon: Repeat,
+      action: () => setShowSubscriptionModal(true),
+      color: "bg-orange-500",
+      badge: "NEW"
+    },
+    {
+      title: "Split Group Payment",
+      description: "Divide expenses among friends",
+      icon: Users,
+      action: () => setShowGroupPaymentModal(true),
+      color: "bg-pink-500",
+      badge: "NEW"
     }
   ];
 
@@ -55,7 +79,7 @@ export const Dashboard = () => {
             <Zap className="h-6 w-6 ml-2 text-yellow-500" title="Real-time updates enabled" />
           </h1>
           <p className="text-gray-500 mt-1">
-            Live dashboard with real-time payment updates
+            Live dashboard with programmable commerce features
           </p>
         </div>
         <div className="flex gap-3">
@@ -74,6 +98,49 @@ export const Dashboard = () => {
 
       {/* Revenue Metrics */}
       <RevenueMetrics metrics={metrics} loading={loading} />
+
+      {/* Hackathon Features - Programmable Commerce */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Zap className="h-5 w-5 mr-2 text-yellow-500" />
+            Programmable Commerce Features
+            <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+              MetaMask Hackathon
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            {hackathonFeatures.map((feature) => (
+              <div
+                key={feature.title}
+                onClick={feature.action}
+                className="group p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer relative"
+              >
+                {feature.badge && (
+                  <span className="absolute top-2 right-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                    {feature.badge}
+                  </span>
+                )}
+                <div className="flex items-start space-x-3">
+                  <div className={`p-2 rounded-lg ${feature.color} text-white`}>
+                    <feature.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium group-hover:text-blue-600 transition-colors">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Secondary Analytics */}
       <div className="grid gap-6 md:grid-cols-2">
@@ -140,6 +207,17 @@ export const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
+      
+      <GroupPaymentModal
+        isOpen={showGroupPaymentModal}
+        onClose={() => setShowGroupPaymentModal(false)}
+      />
     </div>
   );
 };
