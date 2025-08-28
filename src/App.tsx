@@ -15,6 +15,7 @@ const Transactions = lazy(() => import("./pages/Transactions"));
 const Invoices = lazy(() => import("./pages/Invoices"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const QRCodes = lazy(() => import("./pages/QRCodes"));
+const RealtimeNotifications = lazy(() => import("./components/RealtimeNotifications"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Help = lazy(() => import("./pages/Help"));
@@ -31,7 +32,9 @@ import { BackendTestComponent } from './components/BackendTestComponent';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 0, // Always consider data stale for real-time updates
+      refetchOnWindowFocus: true, // Refetch when tab becomes active
+      refetchOnMount: true, // Always refetch on component mount
       retry: 1,
     },
   },
@@ -162,6 +165,9 @@ const App = () => (
         <BrowserRouter>
           <div className="min-h-screen bg-background">
             <AppRoutes />
+            <Suspense fallback={null}>
+              <RealtimeNotifications />
+            </Suspense>
           </div>
         </BrowserRouter>
       </TooltipProvider>
