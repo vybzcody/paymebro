@@ -6,22 +6,44 @@ export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user } = useWeb3Auth()
+  const { user, publicKey } = useWeb3Auth()
 
   // Fetch transactions
   const fetchTransactions = async () => {
-    if (!user?.id) return
+    if (!user?.walletAddress && !publicKey) {
+      console.log('No wallet address available for fetching transactions');
+      return;
+    }
+
+    const walletAddress = user?.walletAddress || publicKey?.toString();
+    if (!walletAddress) return;
 
     try {
       setLoading(true)
+      console.log('Fetching transactions for wallet:', walletAddress);
+      
+      // First get user by wallet address, then get transactions
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('wallet_address', walletAddress)
+        .single();
+
+      if (userError) {
+        console.log('User not found in database:', userError);
+        setTransactions([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userData.id)
         .order('created_at', { ascending: false })
         .limit(50)
 
       if (error) throw error
+      console.log('Fetched transactions:', data);
       setTransactions(data || [])
     } catch (err: any) {
       setError(err.message)
@@ -33,7 +55,8 @@ export const useTransactions = () => {
 
   // Real-time subscription
   useEffect(() => {
-    if (!user?.id) return
+    const walletAddress = user?.walletAddress || publicKey?.toString();
+    if (!walletAddress) return
 
     fetchTransactions()
 
@@ -45,8 +68,7 @@ export const useTransactions = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'transactions',
-          filter: `user_id=eq.${user.id}`
+          table: 'transactions'
         },
         (payload) => {
           console.log('🔄 Transaction update:', payload)
@@ -67,7 +89,7 @@ export const useTransactions = () => {
     return () => {
       subscription.unsubscribe()
     }
-  }, [user?.id])
+  }, [user?.walletAddress, publicKey])
 
   return {
     transactions,

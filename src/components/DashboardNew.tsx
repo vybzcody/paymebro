@@ -17,6 +17,11 @@ export const Dashboard = () => {
   const { transactions, loading: txLoading } = useTransactions();
   const { paymentLinks, loading: linksLoading, createPaymentLink } = usePaymentLinks();
   
+  // Debug logging
+  console.log('Dashboard user:', user);
+  console.log('User ID:', user?.id);
+  console.log('PublicKey:', publicKey?.toString());
+  
   const [newLink, setNewLink] = useState({ title: '', amount: '' });
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -76,13 +81,23 @@ export const Dashboard = () => {
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500">Welcome back, {user.name || 'User'}</p>
         </div>
-        <Button 
-          onClick={() => setShowCreateForm(true)}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create Payment Link
-        </Button>
+        <div className="flex space-x-2">
+          <Button variant="outline">
+            <Send className="h-4 w-4 mr-2" />
+            Send Invoice
+          </Button>
+          <Button variant="outline">
+            <QrCode className="h-4 w-4 mr-2" />
+            Generate QR
+          </Button>
+          <Button 
+            onClick={() => setShowCreateForm(true)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Payment Link
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -90,28 +105,28 @@ export const Dashboard = () => {
         <StatCard
           title="Total Revenue"
           value={`$${totalRevenue.toFixed(2)}`}
-          icon={DollarSign}
+          icon={<DollarSign className="h-5 w-5" />}
           trend="+12.5%"
           trendUp={true}
         />
         <StatCard
           title="Transactions"
           value={totalTransactions.toString()}
-          icon={CreditCard}
+          icon={<CreditCard className="h-5 w-5" />}
           trend="+8.2%"
           trendUp={true}
         />
         <StatCard
           title="Customers"
           value={uniqueCustomers.toString()}
-          icon={Users}
+          icon={<Users className="h-5 w-5" />}
           trend="+15.3%"
           trendUp={true}
         />
         <StatCard
           title="Active Links"
           value={paymentLinks.filter(link => link.is_active).length.toString()}
-          icon={Link}
+          icon={<Link className="h-5 w-5" />}
           trend="0%"
           trendUp={false}
         />
