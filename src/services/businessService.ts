@@ -37,8 +37,18 @@ export interface Invoice {
  */
 export const getBusinessMetrics = async (userId: string): Promise<BusinessMetrics> => {
   try {
-    // For now, return mock data since we need to implement the backend endpoint
-    // TODO: Implement GET /api/metrics endpoint
+    const response = await fetch(`${API_BASE_URL}/api/metrics?merchantId=${userId}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch metrics');
+    }
+
+    const result = await response.json();
+    return result.metrics;
+  } catch (error) {
+    console.error('Error fetching business metrics:', error);
+    // Return default values on error
     return {
       totalRevenue: 0,
       totalTransactions: 0,
@@ -46,9 +56,6 @@ export const getBusinessMetrics = async (userId: string): Promise<BusinessMetric
       activeCustomers: 0,
       monthlyGrowth: 0
     };
-  } catch (error) {
-    console.error('Error fetching business metrics:', error);
-    throw error;
   }
 };
 
