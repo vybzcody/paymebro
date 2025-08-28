@@ -138,10 +138,14 @@ export const Web3AuthProvider: React.FC<Web3AuthProviderProps> = ({ children }) 
           const updatedUser = {
             ...userInfo,
             id: backendUser.id, // UUID from backend
+            userId: backendUser.id, // Also set userId for compatibility
             walletAddress: backendUser.walletAddress
           };
           console.log('Setting updated user with ID:', updatedUser);
-          setUser(updatedUser);
+          
+          // Force state update
+          setUser(null);
+          setTimeout(() => setUser(updatedUser), 0);
         } catch (syncError) {
           console.error('Failed to sync user with backend:', syncError);
           // Continue with Web3Auth user data only - generate a UUID for fallback
