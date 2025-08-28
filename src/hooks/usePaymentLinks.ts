@@ -110,10 +110,60 @@ export const usePaymentLinks = () => {
     }
   }
 
+  // Real-time subscription
   useEffect(() => {
     const walletAddress = user?.walletAddress || publicKey?.toString()
-    if (walletAddress) {
-      fetchPaymentLinks()
+    if (!walletAddress) return
+
+    fetchPaymentLinks()
+
+    // Get user ID for subscription
+    const setupSubscription = async () => {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('wallet_address', walletAddress)
+        .single()
+
+      if (!userData) return
+
+      // Set up real-time subscription
+      const subscription = supabase
+        .channel('payment_links')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'payment_links',
+            filter: `user_id=eq.${userData.id}`
+          },
+          (payload) => {
+            console.log('🔄 Payment link update:', payload)
+            
+            if (payload.eventType === 'INSERT') {
+              setPaymentLinks(prev => [payload.new as PaymentLink, ...prev])
+            } else if (payload.eventType === 'UPDATE') {
+              setPaymentLinks(prev => 
+                prev.map(link => 
+                  link.id === payload.new.id ? payload.new as PaymentLink : link
+                )
+              )
+            } else if (payload.eventType === 'DELETE') {
+              setPaymentLinks(prev => prev.filter(link => link.id !== payload.old.id))
+            }
+          }
+        )
+        .subscribe()
+
+      return () => {
+        subscription.unsubscribe()
+      }
+    }
+
+    const cleanup = setupSubscription()
+    return () => {
+      cleanup.then(fn => fn?.())
     }
   }, [user?.walletAddress, publicKey])
 

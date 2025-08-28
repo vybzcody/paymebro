@@ -116,10 +116,60 @@ export const useQRCodes = () => {
     }
   }
 
+  // Real-time subscription
   useEffect(() => {
     const walletAddress = user?.walletAddress || publicKey?.toString()
-    if (walletAddress) {
-      fetchQRCodes()
+    if (!walletAddress) return
+
+    fetchQRCodes()
+
+    // Get user ID for subscription
+    const setupSubscription = async () => {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('wallet_address', walletAddress)
+        .single()
+
+      if (!userData) return
+
+      // Set up real-time subscription
+      const subscription = supabase
+        .channel('qr_codes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'qr_codes',
+            filter: `user_id=eq.${userData.id}`
+          },
+          (payload) => {
+            console.log('🔄 QR code update:', payload)
+            
+            if (payload.eventType === 'INSERT') {
+              setQRCodes(prev => [payload.new as QRCode, ...prev])
+            } else if (payload.eventType === 'UPDATE') {
+              setQRCodes(prev => 
+                prev.map(qr => 
+                  qr.id === payload.new.id ? payload.new as QRCode : qr
+                )
+              )
+            } else if (payload.eventType === 'DELETE') {
+              setQRCodes(prev => prev.filter(qr => qr.id !== payload.old.id))
+            }
+          }
+        )
+        .subscribe()
+
+      return () => {
+        subscription.unsubscribe()
+      }
+    }
+
+    const cleanup = setupSubscription()
+    return () => {
+      cleanup.then(fn => fn?.())
     }
   }, [user?.walletAddress, publicKey])
 
