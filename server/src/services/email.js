@@ -325,8 +325,160 @@ export class EmailService {
   }
 
   /**
-   * Send test email to verify configuration
+   * Send invoice notification to customer
    */
+  async sendInvoiceNotification({
+    customerEmail,
+    customerName,
+    merchantName,
+    invoiceNumber,
+    amount,
+    currency,
+    totalAmount,
+    description,
+    paymentUrl,
+    dueDate,
+    notes
+  }) {
+    if (!this.enabled) {
+      console.log('Email service disabled, skipping invoice notification');
+      return { success: false, reason: 'Email service not configured' };
+    }
+
+    try {
+      console.log('📧 Sending invoice email with Resend API...');
+      
+      const result = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [customerEmail],
+        subject: `📄 Invoice ${invoiceNumber} from ${merchantName}`,
+        html: this.generateInvoiceHTML({
+          customerName,
+          merchantName,
+          invoiceNumber,
+          amount,
+          currency,
+          totalAmount,
+          description,
+          paymentUrl,
+          dueDate,
+          notes
+        })
+      });
+
+      console.log('📧 Invoice email sent successfully:', result.data?.id);
+      
+      return {
+        success: true,
+        messageId: result.data?.id,
+        recipient: customerEmail
+      };
+    } catch (error) {
+      console.error('📧 Failed to send invoice email:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Generate invoice email HTML
+   */
+  generateInvoiceHTML({
+    customerName,
+    merchantName,
+    invoiceNumber,
+    amount,
+    currency,
+    totalAmount,
+    description,
+    paymentUrl,
+    dueDate,
+    notes
+  }) {
+    const formattedDueDate = dueDate ? new Date(dueDate).toLocaleDateString() : 'No due date';
+    
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Invoice ${invoiceNumber}</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .invoice-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
+        .amount { font-size: 24px; font-weight: bold; color: #667eea; text-align: center; margin: 20px 0; }
+        .button { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; }
+        .detail-row { display: flex; justify-content: space-between; margin: 10px 0; }
+        .label { font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>📄 Invoice from ${merchantName}</h1>
+        <p>Invoice #${invoiceNumber}</p>
+      </div>
+      
+      <div class="content">
+        <p>Hello ${customerName || 'Valued Customer'},</p>
+        
+        <p>You have received an invoice from <strong>${merchantName}</strong>. Please review the details below:</p>
+        
+        <div class="invoice-details">
+          <div class="detail-row">
+            <span class="label">Invoice Number:</span>
+            <span class="value">${invoiceNumber}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Description:</span>
+            <span class="value">${description}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Amount:</span>
+            <span class="value">${amount} ${currency}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Due Date:</span>
+            <span class="value">${formattedDueDate}</span>
+          </div>
+          ${notes ? `
+          <div class="detail-row">
+            <span class="label">Notes:</span>
+            <span class="value">${notes}</span>
+          </div>
+          ` : ''}
+        </div>
+        
+        <div class="amount">
+          Total: ${totalAmount} ${currency}
+        </div>
+        
+        <div style="text-align: center;">
+          <a href="${paymentUrl}" class="button">💳 Pay Now with Solana</a>
+        </div>
+        
+        <p><strong>Why Solana Pay?</strong></p>
+        <ul>
+          <li>⚡ Instant confirmation (0.4 seconds)</li>
+          <li>🔒 Secure blockchain technology</li>
+          <li>💰 Low transaction fees</li>
+          <li>🌍 Global accessibility</li>
+        </ul>
+      </div>
+      
+      <div class="footer">
+        <p><strong>AfriPay</strong> - Secure Solana Payments</p>
+        <p>This invoice was sent via AfriPay's secure payment platform.</p>
+        <p>Questions? Contact ${merchantName} or support@afripay.com</p>
+      </div>
+    </body>
+    </html>
+    `;
+  }
   async sendTestEmail(toEmail) {
     if (!this.enabled) {
       return { success: false, reason: 'Email service not configured' };
