@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useWeb3Auth } from "@/contexts/Web3AuthContext";
+import { createInvoice } from "@/services/businessService";
 
 interface InvoiceItem {
   id: string;
@@ -39,6 +41,7 @@ interface CreateInvoiceModalProps {
 
 export const CreateInvoiceModal = ({ isOpen, onClose }: CreateInvoiceModalProps) => {
   const { toast } = useToast();
+  const { user } = useWeb3Auth();
   const [currentStep, setCurrentStep] = useState(1);
   const [invoiceData, setInvoiceData] = useState({
     customerName: "",
@@ -101,20 +104,29 @@ export const CreateInvoiceModal = ({ isOpen, onClose }: CreateInvoiceModalProps)
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "Authentication Error",
+        description: "Please log in to create invoices",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Create invoice data
-      const invoice = {
-        id: invoiceData.invoiceNumber,
+      const invoice = await createInvoice(user.id, {
+        merchantName: user.name || 'AfriPay Merchant',
+        merchantEmail: user.email || '',
+        merchantWallet: '', // TODO: Get from Web3Auth context
         customerName: invoiceData.customerName,
         customerEmail: invoiceData.customerEmail,
-        items,
-        subtotal,
-        tax,
-        total,
-        issueDate: invoiceData.issueDate,
+        amount: total,
+        currency: 'USDC',
+        description: invoiceData.notes || items.map(item => item.description).join(', '),
         dueDate: invoiceData.dueDate,
-        notes: invoiceData.notes
-      };
+        notes: invoiceData.notes,
+        sendEmail: invoiceData.sendEmail
+      });
 
       // Send email if requested
       if (invoiceData.sendEmail) {
@@ -123,17 +135,18 @@ export const CreateInvoiceModal = ({ isOpen, onClose }: CreateInvoiceModalProps)
         
         toast({
           title: "Invoice Created & Sent",
-          description: `Invoice ${invoiceData.invoiceNumber} sent to ${invoiceData.customerEmail}`,
+          description: `Invoice ${invoice.invoice_number} sent to ${invoiceData.customerEmail}`,
         });
       } else {
         toast({
           title: "Invoice Created",
-          description: `Invoice ${invoiceData.invoiceNumber} saved as draft`,
+          description: `Invoice ${invoice.invoice_number} saved as draft`,
         });
       }
       
       onClose();
     } catch (error) {
+      console.error('Error creating invoice:', error);
       toast({
         title: "Error",
         description: "Failed to create invoice. Please try again.",

@@ -15,6 +15,7 @@ import createRouter from './src/routes/create.js';
 import confirmRouter from './src/routes/confirm.js';
 import healthRouter from './src/routes/health.js';
 import networkRouter from './src/routes/network.js';
+import invoiceRouter from './src/routes/invoice.js';
 
 // Validate configuration on startup
 try {
@@ -85,6 +86,7 @@ app.get('/', (req, res) => {
 app.use('/api/payment', paymentRouter);
 app.use('/api/create', createRouter);
 app.use('/api/confirm', confirmRouter);
+app.use('/api/invoices', invoiceRouter);
 
 // API documentation endpoint
 app.get('/docs', (req, res) => {
