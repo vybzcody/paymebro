@@ -1,12 +1,13 @@
 import express from 'express';
 import morgan from 'morgan';
 import { validateConfig, SERVER_CONFIG } from './src/config/index.js';
-import { 
-  corsMiddleware, 
-  rateLimitMiddleware, 
-  helmetMiddleware, 
+import { transactionMonitor } from './src/services/transactionMonitor.js';
+import {
+  corsMiddleware,
+  rateLimitMiddleware,
+  helmetMiddleware,
   validateContentType,
-  securityErrorHandler 
+  securityErrorHandler
 } from './src/middleware/security.js';
 
 // Import routes
@@ -18,6 +19,8 @@ import networkRouter from './src/routes/network.js';
 import invoiceRouter from './src/routes/invoice.js';
 import metricsRouter from './src/routes/metrics.js';
 import userRouter from './src/routes/user.js';
+import qrRouter from './src/routes/qr.js';
+import paymentLinksRouter from './src/routes/paymentLinks.js';
 
 // Validate configuration on startup
 try {
@@ -42,13 +45,13 @@ app.use(rateLimitMiddleware);
 app.use(morgan(SERVER_CONFIG.isDevelopment ? 'dev' : 'combined'));
 
 // Body parsing middleware
-app.use(express.json({ 
+app.use(express.json({
   limit: '10mb',
   type: ['application/json', 'text/plain']
 }));
-app.use(express.urlencoded({ 
-  extended: true, 
-  limit: '10mb' 
+app.use(express.urlencoded({
+  extended: true,
+  limit: '10mb'
 }));
 
 // Content type validation
@@ -91,6 +94,10 @@ app.use('/api/confirm', confirmRouter);
 app.use('/api/invoices', invoiceRouter);
 app.use('/api/metrics', metricsRouter);
 app.use('/api/user', userRouter);
+app.use('/api/qr', qrRouter);
+app.use('/api/payment-links', paymentLinksRouter);
+
+
 
 // API documentation endpoint
 app.get('/docs', (req, res) => {
@@ -257,11 +264,11 @@ app.use(securityErrorHandler);
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  
+
   // Don't leak error details in production
   const errorMessage = SERVER_CONFIG.isDevelopment ? err.message : 'Internal server error';
   const errorStack = SERVER_CONFIG.isDevelopment ? err.stack : undefined;
-  
+
   res.status(err.status || 500).json({
     error: 'Internal Server Error',
     message: errorMessage,
@@ -297,7 +304,7 @@ process.on('uncaughtException', (error) => {
 });
 
 // Start server
-const server = app.listen(SERVER_CONFIG.port, () => {
+const server = app.listen(SERVER_CONFIG.port, async () => {
   console.log('\\n🚀 AfriPay Backend Server Started Successfully!');
   console.log('================================================');
   console.log(`📡 Server: http://localhost:${SERVER_CONFIG.port}`);
@@ -306,13 +313,20 @@ const server = app.listen(SERVER_CONFIG.port, () => {
   console.log(`📚 Documentation: http://localhost:${SERVER_CONFIG.port}/docs`);
   console.log('================================================');
   console.log('✅ Ready to process Solana Pay transactions!');
-  
+
   if (SERVER_CONFIG.isDevelopment) {
     console.log('\\n🔧 Development Mode - Additional Info:');
     console.log('   - Hot reload: Not enabled (use nodemon)');
     console.log('   - Error details: Exposed in responses');
     console.log('   - CORS: Permissive for development');
     console.log('   - Rate limiting: Reduced for testing');
+  }
+
+  // Start transaction monitoring
+  try {
+    await transactionMonitor.startMonitoring();
+  } catch (error) {
+    console.error('Failed to start transaction monitoring:', error);
   }
 });
 

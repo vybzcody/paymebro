@@ -10,14 +10,16 @@ import { Suspense, lazy } from 'react';
 // Lazy load pages for better performance
 const Landing = lazy(() => import("./pages/Landing"));
 const Index = lazy(() => import("./pages/Index"));
-const Payments = lazy(() => import("./pages/Payments"));
+const PaymentLinks = lazy(() => import("./pages/PaymentLinks"));
+const Transactions = lazy(() => import("./pages/Transactions"));
 const Invoices = lazy(() => import("./pages/Invoices"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const QRCodes = lazy(() => import("./pages/QRCodes"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Help = lazy(() => import("./pages/Help"));
 const Customers = lazy(() => import("./pages/Customers"));
 const Profile = lazy(() => import("./pages/Profile"));
-const Notifications = lazy(() => import("./pages/Notifications"));
 const Billing = lazy(() => import("./pages/Billing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -55,79 +57,97 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<LoadingSpinner text="Loading..." />}>
       <Routes>
-      {/* Public Routes - Landing page is now default */}
-      <Route path="/" element={<Landing />} />
+        {/* Public Routes - Landing page is now default */}
+        <Route path="/" element={<Landing />} />
 
-      {/* Protected Dashboard Routes */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Index />
-        </ProtectedRoute>
-      } />
+        {/* Protected Dashboard Routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Index />
+          </ProtectedRoute>
+        } />
 
-      <Route path="/payments" element={
-        <ProtectedRoute>
-          <Payments />
-        </ProtectedRoute>
-      } />
+        <Route path="/payment-links" element={
+          <ProtectedRoute>
+            <PaymentLinks />
+          </ProtectedRoute>
+        } />
 
-      <Route path="/invoices" element={
-        <ProtectedRoute>
-          <Invoices />
-        </ProtectedRoute>
-      } />
+        <Route path="/transactions" element={
+          <ProtectedRoute>
+            <Transactions />
+          </ProtectedRoute>
+        } />
 
-      <Route path="/analytics" element={
-        <ProtectedRoute>
-          <Analytics />
-        </ProtectedRoute>
-      } />
+        <Route path="/qr-codes" element={
+          <ProtectedRoute>
+            <QRCodes />
+          </ProtectedRoute>
+        } />
 
-      <Route path="/customers" element={
-        <ProtectedRoute>
-          <Customers />
-        </ProtectedRoute>
-      } />
+        <Route path="/invoices" element={
+          <ProtectedRoute>
+            <Invoices />
+          </ProtectedRoute>
+        } />
 
-      <Route path="/settings" element={
-        <ProtectedRoute>
-          <Settings />
-        </ProtectedRoute>
-      } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        } />
 
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      } />
+        <Route path="/analytics" element={
+          <ProtectedRoute>
+            <Analytics />
+          </ProtectedRoute>
+        } />
 
-      <Route path="/notifications" element={
-        <ProtectedRoute>
-          <Notifications />
-        </ProtectedRoute>
-      } />
+        <Route path="/customers" element={
+          <ProtectedRoute>
+            <Customers />
+          </ProtectedRoute>
+        } />
 
-      <Route path="/billing" element={
-        <ProtectedRoute>
-          <Billing />
-        </ProtectedRoute>
-      } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        } />
 
-      <Route path="/help" element={
-        <ProtectedRoute>
-          <Help />
-        </ProtectedRoute>
-      } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
 
-      {/* Backend Test Route - Development Only */}
-      <Route path="/test-backend" element={
-        <ProtectedRoute>
-          <BackendTestComponent />
-        </ProtectedRoute>
-      } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        } />
 
-      {/* 404 Page */}
-      <Route path="*" element={<NotFound />} />
+        <Route path="/billing" element={
+          <ProtectedRoute>
+            <Billing />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/help" element={
+          <ProtectedRoute>
+            <Help />
+          </ProtectedRoute>
+        } />
+
+        {/* Backend Test Route - Development Only */}
+        <Route path="/test-backend" element={
+          <ProtectedRoute>
+            <BackendTestComponent />
+          </ProtectedRoute>
+        } />
+
+        {/* 404 Page */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );

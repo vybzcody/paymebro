@@ -45,7 +45,9 @@ export const DashboardHeader = () => {
 
   const navigationItems = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/payments", label: "Payments" },
+    { href: "/payment-links", label: "Payment Links" },
+    { href: "/transactions", label: "Transactions" },
+    { href: "/qr-codes", label: "QR Codes" },
     { href: "/invoices", label: "Invoices" },
     { href: "/customers", label: "Customers" },
     { href: "/analytics", label: "Analytics" },
@@ -104,14 +106,14 @@ export const DashboardHeader = () => {
           {/* Actions */}
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="sm" className="relative" asChild>
-              <a href="/notifications">
+              <Link to="/notifications">
                 <Bell className="w-4 h-4" />
                 {unreadNotifications > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
                     {unreadNotifications}
                   </span>
                 )}
-              </a>
+              </Link>
             </Button>
 
             <Button variant="ghost" size="sm" asChild>
@@ -216,7 +218,10 @@ export const DashboardHeader = () => {
                     <NavLink href="/billing" label="Billing" mobile />
                     <NavLink href="/profile" label="Profile" mobile />
                     <div className="flex items-center justify-between">
-                      <NavLink href="/notifications" label="Notifications" mobile />
+                      <Link to="/notifications" className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                        <Bell className="w-4 h-4" />
+                        <span>Notifications</span>
+                      </Link>
                       {unreadNotifications > 0 && (
                         <span className="w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
                           {unreadNotifications}
