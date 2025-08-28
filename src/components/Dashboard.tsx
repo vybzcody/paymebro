@@ -8,37 +8,69 @@ import { StatCard } from "./StatCard";
 import { QRGenerator } from "./QRGenerator";
 import { useWeb3Auth } from "@/contexts/Web3AuthContext";
 import { useSolanaPay } from "@/hooks/useSolanaPay";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { getBusinessMetrics, createPaymentLink, getPaymentLinks, type BusinessMetrics, type PaymentLink } from "@/services/businessService";
 
 export const Dashboard = () => {
   const { user, publicKey } = useWeb3Auth();
   const { paymentStatus } = useSolanaPay();
   
-  const [paymentLinks, setPaymentLinks] = useState([]);
+  const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>([]);
   const [newLink, setNewLink] = useState({ title: '', amount: '' });
+  const [metrics, setMetrics] = useState<BusinessMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const createPaymentLink = () => {
-    if (!newLink.title || !newLink.amount) {
+  // Load business data on component mount
+  useEffect(() => {
+    if (user?.id) {
+      loadBusinessData();
+    }
+  }, [user?.id]);
+
+  const loadBusinessData = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoading(true);
+      const [metricsData, linksData] = await Promise.all([
+        getBusinessMetrics(user.id),
+        getPaymentLinks(user.id)
+      ]);
+      
+      setMetrics(metricsData);
+      setPaymentLinks(linksData);
+    } catch (error) {
+      console.error('Error loading business data:', error);
+      toast.error('Failed to load business data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreatePaymentLink = async () => {
+    if (!newLink.title || !newLink.amount || !user?.id) {
       toast.error('Please fill all fields');
       return;
     }
     
-    const link = {
-      id: Date.now().toString(),
-      title: newLink.title,
-      amount: parseFloat(newLink.amount),
-      url: `https://afripay.com/pay/${Math.random().toString(36).substr(2, 9)}`,
-      created: new Date().toLocaleDateString(),
-      clicks: 0
-    };
-    
-    setPaymentLinks([link, ...paymentLinks]);
-    setNewLink({ title: '', amount: '' });
-    toast.success('Payment link created!');
+    try {
+      const link = await createPaymentLink(
+        user.id,
+        newLink.title,
+        parseFloat(newLink.amount)
+      );
+      
+      setPaymentLinks([link, ...paymentLinks]);
+      setNewLink({ title: '', amount: '' });
+      toast.success('Payment link created!');
+    } catch (error) {
+      console.error('Error creating payment link:', error);
+      toast.error('Failed to create payment link');
+    }
   };
 
-  const copyLink = (url) => {
+  const copyLink = (url: string) => {
     navigator.clipboard.writeText(url);
     toast.success('Link copied!');
   };
@@ -84,33 +116,33 @@ export const Dashboard = () => {
           <div className="opacity-0 animate-fade-in-up">
             <StatCard
               title="Total Revenue"
-              value="$12,435"
+              value={loading ? "..." : `$${metrics?.totalRevenue.toLocaleString() || '0'}`}
               icon={<DollarSign className="w-4 h-4" />}
               trend="+12.5%"
             />
           </div>
           <div className="opacity-0 animate-fade-in-up animate-delay-100">
             <StatCard
-              title="Solana Payments"
-              value="347"
+              title="Transactions"
+              value={loading ? "..." : `${metrics?.totalTransactions || 0}`}
               icon={<Zap className="w-4 h-4" />}
               trend="+24.8%"
             />
           </div>
           <div className="opacity-0 animate-fade-in-up animate-delay-200">
             <StatCard
-              title="Active QR Codes"
-              value="12"
-              icon={<QrCode className="w-4 h-4" />}
-              trend="+15.3%"
+              title="Success Rate"
+              value={loading ? "..." : `${metrics?.successRate.toFixed(1) || '0'}%`}
+              icon={<TrendingUp className="w-4 h-4" />}
+              trend="Excellent"
             />
           </div>
           <div className="opacity-0 animate-fade-in-up animate-delay-300">
             <StatCard
-              title="Avg. Confirmation"
-              value="0.4s"
-              icon={<Clock className="w-4 h-4" />}
-              trend="Solana Speed"
+              title="Customers"
+              value={loading ? "..." : `${metrics?.activeCustomers || 0}`}
+              icon={<Users className="w-4 h-4" />}
+              trend="+5.1%"
             />
           </div>
         </div>
@@ -293,7 +325,7 @@ export const Dashboard = () => {
                   />
                 </div>
                 <div className="flex items-end">
-                  <Button onClick={createPaymentLink} className="w-full">
+                  <Button onClick={handleCreatePaymentLink} className="w-full">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Link
                   </Button>
@@ -313,7 +345,7 @@ export const Dashboard = () => {
                       <div>
                         <h4 className="font-medium">{link.title}</h4>
                         <p className="text-sm text-muted-foreground">
-                          ${link.amount} USDC • {link.clicks} clicks • Created {link.created}
+                          ${link.amount} {link.currency} • {link.clicks} clicks • Created {new Date(link.created_at).toLocaleDateString()}
                         </p>
                       </div>
                       <Button

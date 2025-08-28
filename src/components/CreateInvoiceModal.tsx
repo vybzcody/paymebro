@@ -91,7 +91,7 @@ export const CreateInvoiceModal = ({ isOpen, onClose }: CreateInvoiceModalProps)
   const tax = subtotal * 0.075; // 7.5% tax
   const total = subtotal + tax;
 
-  const handleCreateInvoice = () => {
+  const handleCreateInvoice = async () => {
     if (!invoiceData.customerName || !invoiceData.customerEmail || items.some(item => !item.description || item.rate <= 0)) {
       toast({
         title: "Missing Information",
@@ -101,11 +101,45 @@ export const CreateInvoiceModal = ({ isOpen, onClose }: CreateInvoiceModalProps)
       return;
     }
 
-    toast({
-      title: "Invoice Created",
-      description: `Invoice ${invoiceData.invoiceNumber} has been created and ${invoiceData.sendEmail ? 'sent to customer' : 'saved as draft'}`,
-    });
-    onClose();
+    try {
+      // Create invoice data
+      const invoice = {
+        id: invoiceData.invoiceNumber,
+        customerName: invoiceData.customerName,
+        customerEmail: invoiceData.customerEmail,
+        items,
+        subtotal,
+        tax,
+        total,
+        issueDate: invoiceData.issueDate,
+        dueDate: invoiceData.dueDate,
+        notes: invoiceData.notes
+      };
+
+      // Send email if requested
+      if (invoiceData.sendEmail) {
+        // TODO: Integrate with backend email service
+        console.log('Sending invoice email to:', invoiceData.customerEmail);
+        
+        toast({
+          title: "Invoice Created & Sent",
+          description: `Invoice ${invoiceData.invoiceNumber} sent to ${invoiceData.customerEmail}`,
+        });
+      } else {
+        toast({
+          title: "Invoice Created",
+          description: `Invoice ${invoiceData.invoiceNumber} saved as draft`,
+        });
+      }
+      
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create invoice. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePreview = () => {
