@@ -1,15 +1,47 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, Send, CreditCard, TrendingUp, Users, DollarSign, Wallet, Zap, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { QrCode, Send, CreditCard, TrendingUp, Users, DollarSign, Wallet, Zap, Clock, Link, Copy, Plus } from "lucide-react";
 import { StatCard } from "./StatCard";
 import { QRGenerator } from "./QRGenerator";
 import { useWeb3Auth } from "@/contexts/Web3AuthContext";
 import { useSolanaPay } from "@/hooks/useSolanaPay";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const Dashboard = () => {
   const { user, publicKey } = useWeb3Auth();
   const { paymentStatus } = useSolanaPay();
+  
+  const [paymentLinks, setPaymentLinks] = useState([]);
+  const [newLink, setNewLink] = useState({ title: '', amount: '' });
+
+  const createPaymentLink = () => {
+    if (!newLink.title || !newLink.amount) {
+      toast.error('Please fill all fields');
+      return;
+    }
+    
+    const link = {
+      id: Date.now().toString(),
+      title: newLink.title,
+      amount: parseFloat(newLink.amount),
+      url: `https://afripay.com/pay/${Math.random().toString(36).substr(2, 9)}`,
+      created: new Date().toLocaleDateString(),
+      clicks: 0
+    };
+    
+    setPaymentLinks([link, ...paymentLinks]);
+    setNewLink({ title: '', amount: '' });
+    toast.success('Payment link created!');
+  };
+
+  const copyLink = (url) => {
+    navigator.clipboard.writeText(url);
+    toast.success('Link copied!');
+  };
 
   return (
     <div className="space-y-6">
@@ -226,6 +258,75 @@ export const Dashboard = () => {
                   <span className="text-muted-foreground">Average confirmation time: 0.4 seconds</span>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Payment Links Section */}
+        <div className="opacity-0 animate-fade-in-up animate-delay-600">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Link className="w-5 h-5" />
+                Payment Links
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="title">Product/Service</Label>
+                  <Input
+                    id="title"
+                    placeholder="e.g., Premium Plan"
+                    value={newLink.title}
+                    onChange={(e) => setNewLink({ ...newLink, title: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="amount">Amount (USDC)</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder="0.00"
+                    value={newLink.amount}
+                    onChange={(e) => setNewLink({ ...newLink, amount: e.target.value })}
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button onClick={createPaymentLink} className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Link
+                  </Button>
+                </div>
+              </div>
+
+              {paymentLinks.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Link className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No payment links yet</p>
+                  <p className="text-sm">Create your first payment link above</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {paymentLinks.map((link) => (
+                    <div key={link.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{link.title}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          ${link.amount} USDC • {link.clicks} clicks • Created {link.created}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyLink(link.url)}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
