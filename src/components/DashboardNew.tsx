@@ -11,10 +11,13 @@ import { PaymentTemplates } from '@/components/PaymentTemplates';
 import { PaymentWidgets } from '@/components/PaymentWidgets';
 import { FeeBreakdown } from '@/components/FeeBreakdown';
 import { SuccessAnimation } from '@/components/SuccessAnimation';
+import { TransactionSpeedCounter } from '@/components/TransactionSpeedCounter';
+import { MobileQRScanner } from '@/components/MobileQRScanner';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, QrCode, Link, FileText, TrendingUp, Zap, Repeat, Users, Mail } from "lucide-react";
+import { Plus, QrCode, Link, FileText, TrendingUp, Zap, Repeat, Users, Mail, Scan } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
+import { toast } from 'sonner';
 
 export const Dashboard = () => {
   const { user } = useAuth();
@@ -27,8 +30,22 @@ export const Dashboard = () => {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showGroupPaymentModal, setShowGroupPaymentModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [showSpeedCounter, setShowSpeedCounter] = useState(false);
 
   const { metrics, loading } = useRealtimeAnalytics(filters);
+
+  const handleQRScan = (data: string) => {
+    console.log('Scanned QR data:', data);
+    toast.success('Payment QR code scanned successfully!');
+    setShowSpeedCounter(true);
+    
+    // Simulate payment processing
+    setTimeout(() => {
+      setShowSpeedCounter(false);
+      setShowSuccess(true);
+    }, 500);
+  };
 
   const quickActions = [
     {
@@ -76,6 +93,14 @@ export const Dashboard = () => {
   return (
     <div className="space-y-6">
       <SuccessAnimation show={showSuccess} />
+      
+      {/* Transaction Speed Counter */}
+      {showSpeedCounter && (
+        <TransactionSpeedCounter 
+          isActive={showSpeedCounter}
+          onComplete={() => setShowSpeedCounter(false)}
+        />
+      )}
 
       {/* Header */}
       <div className="flex justify-between items-center">
@@ -89,6 +114,10 @@ export const Dashboard = () => {
           </p>
         </div>
         <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setShowQRScanner(true)} className="md:hidden">
+            <Scan className="h-4 w-4 mr-2" />
+            Scan QR
+          </Button>
           <Button asChild>
             <RouterLink to="/qr-codes">
               <Plus className="h-4 w-4 mr-2" />
@@ -236,6 +265,12 @@ export const Dashboard = () => {
         isOpen={showGroupPaymentModal}
         onClose={() => setShowGroupPaymentModal(false)}
         onSuccess={() => setShowSuccess(true)}
+      />
+
+      <MobileQRScanner
+        isOpen={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScan={handleQRScan}
       />
     </div>
   );
