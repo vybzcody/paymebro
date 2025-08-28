@@ -8,6 +8,9 @@ import { CurrencyBreakdown } from '@/components/analytics/CurrencyBreakdown';
 import { RealtimeDebug } from '@/components/RealtimeDebug';
 import { SubscriptionModal } from '@/components/SubscriptionModal';
 import { GroupPaymentModal } from '@/components/GroupPaymentModal';
+import { PaymentTemplates } from '@/components/PaymentTemplates';
+import { PaymentWidgets } from '@/components/PaymentWidgets';
+import { SuccessAnimation } from '@/components/SuccessAnimation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, QrCode, Link, FileText, TrendingUp, Zap, Repeat, Users, Mail } from "lucide-react";
@@ -23,6 +26,7 @@ export const Dashboard = () => {
 
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showGroupPaymentModal, setShowGroupPaymentModal] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const { metrics, loading } = useRealtimeAnalytics(filters);
 
@@ -71,14 +75,16 @@ export const Dashboard = () => {
 
   return (
     <div className="space-y-6">
+      <SuccessAnimation show={showSuccess} />
+      
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
             Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋
             <Zap className="h-6 w-6 ml-2 text-yellow-500" title="Real-time updates enabled" />
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
             Live dashboard with programmable commerce features
           </p>
         </div>
@@ -92,6 +98,12 @@ export const Dashboard = () => {
           </Button>
         </div>
       </div>
+
+      {/* Payment Widgets */}
+      <PaymentWidgets />
+
+      {/* Quick Payment Templates */}
+      <PaymentTemplates />
 
       {/* Analytics Filters */}
       <FiltersComponent filters={filters} onFiltersChange={setFilters} />
@@ -155,19 +167,19 @@ export const Dashboard = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Average Transaction</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Average Transaction</span>
               <span className="font-medium">
                 ${metrics.totalTransactions > 0 ? (metrics.totalRevenue / metrics.totalTransactions).toFixed(2) : '0.00'}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Growth Rate</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Growth Rate</span>
               <span className={`font-medium ${metrics.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {metrics.growth >= 0 ? '+' : ''}{metrics.growth.toFixed(1)}%
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Revenue per Day</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Revenue per Day</span>
               <span className="font-medium">
                 ${(metrics.totalRevenue / 30).toFixed(2)}
               </span>
@@ -212,11 +224,13 @@ export const Dashboard = () => {
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
+        onSuccess={() => setShowSuccess(true)}
       />
       
       <GroupPaymentModal
         isOpen={showGroupPaymentModal}
         onClose={() => setShowGroupPaymentModal(false)}
+        onSuccess={() => setShowSuccess(true)}
       />
     </div>
   );

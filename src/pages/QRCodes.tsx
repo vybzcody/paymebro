@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { QRReceiptModal } from "@/components/ui/qr-receipt-modal";
+import { SocialShare } from "@/components/SocialShare";
 import { QrCode, Eye, Copy, DollarSign, Trash2 } from "lucide-react";
 import { EmptyState, TransactionSkeleton } from "@/components/EmptyStates";
 import { useQRCodes } from "@/hooks/useQRCodes";
@@ -89,6 +90,13 @@ const QRCodes = () => {
                     <span className="font-medium">{qr.total_collected} {qr.currency}</span>
                   </div>
                 </div>
+
+                <SocialShare 
+                  paymentUrl={qr.payment_url}
+                  amount={qr.amount}
+                  currency={qr.currency}
+                  description={qr.title}
+                />
 
                 <div className="flex space-x-2">
                   <Button
