@@ -9,6 +9,8 @@ const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.serviceKey, {
   }
 });
 
+export { supabase };
+
 /**
  * Database service for managing AfriPay transactions and payments
  */
