@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useMultiChainWeb3Auth } from "@/hooks/useAuth";
+import { useMultiChainWeb3Auth } from '../contexts/MultiChainWeb3AuthContext';
 
 interface AuthUser {
   id: string;
