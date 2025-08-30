@@ -3,9 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Web3AuthProvider } from './contexts/Web3AuthContext';
+import { MultiChainWeb3AuthProvider } from './contexts/MultiChainWeb3AuthContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from './hooks/useMultiChainAuth';
 import { Suspense, lazy } from 'react';
 
 // Lazy load pages for better performance
@@ -166,7 +166,7 @@ const AppRoutes = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Web3AuthProvider>
+    <MultiChainWeb3AuthProvider>
       <MultiChainProvider>
         <CurrencyProvider>
           <TooltipProvider>
@@ -183,7 +183,7 @@ const App = () => (
           </TooltipProvider>
         </CurrencyProvider>
       </MultiChainProvider>
-    </Web3AuthProvider>
+    </MultiChainWeb3AuthProvider>
   </QueryClientProvider>
 );
 

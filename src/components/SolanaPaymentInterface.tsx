@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MultiChainPaymentLink } from '@/types/multichain';
 import { DetectedWallet } from '@/hooks/useWalletDetection';
 import { CctpNetworkId } from '@/lib/cctp/types';
+import { QRGenerator } from './QRGenerator';
 
 interface SolanaPaymentInterfaceProps {
   paymentLink: MultiChainPaymentLink;
@@ -14,6 +15,9 @@ export const SolanaPaymentInterface: React.FC<SolanaPaymentInterfaceProps> = ({
   detectedWallet
 }) => {
   const requiresCCTP = paymentLink.preferredReceiveChain !== CctpNetworkId.SOLANA;
+
+  // Create Solana Pay URL for existing QR component
+  const solanaPayUrl = `solana:${paymentLink.merchantWallets.solana || 'placeholder'}?amount=${paymentLink.amount}&spl-token=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&reference=${paymentLink.id}`;
 
   return (
     <Card>
@@ -29,19 +33,30 @@ export const SolanaPaymentInterface: React.FC<SolanaPaymentInterfaceProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* 
-          TODO: Integrate existing Solana Pay components here
-          - Use existing QR code generation
-          - Use existing transaction handling
-          - Add CCTP conversion if requiresCCTP is true
-        */}
-        <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg">
-          <p className="text-sm text-gray-600">
-            Existing Solana Pay integration goes here
-          </p>
-          <p className="text-xs text-gray-500 mt-2">
-            Amount: ${paymentLink.amount} USDC
-          </p>
+        <div className="space-y-4">
+          <div className="text-center">
+            <QRGenerator 
+              value={solanaPayUrl}
+              size={200}
+              title={`Pay $${paymentLink.amount} USDC`}
+            />
+          </div>
+          
+          <div className="text-center space-y-2">
+            <p className="font-medium">${paymentLink.amount} USDC</p>
+            <p className="text-sm text-gray-600">
+              {paymentLink.description || 'Scan with your Solana wallet'}
+            </p>
+            
+            {requiresCCTP && (
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  🔄 This payment will be automatically converted from Solana to{' '}
+                  {paymentLink.preferredReceiveChain} for the merchant using Circle's CCTP.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
