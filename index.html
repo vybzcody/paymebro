@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+     <script type="module">
+      import { Buffer } from "buffer";
+      import process from "process";
+      window.Buffer = Buffer;
+      window.process = process; 
+    </script>  
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AfriPay - Solana Payment Dashboard</title>
@@ -14,13 +20,7 @@
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@AfriPay" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-     <script type="module">
-      import { Buffer } from "buffer";
-      import process from "process";
-      window.Buffer = Buffer;
-      window.process = process; 
-    </script>  
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />   
   </head>
 
   <body>
