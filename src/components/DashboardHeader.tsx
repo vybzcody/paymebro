@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Bell, Menu, Settings, User, HelpCircle, Users, CreditCard, LogOut, Wallet } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../hooks/useMultiChainAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { CurrencySwitcher } from "./CurrencySwitcher";
+import { ChainSwitcher } from "./ChainSwitcher";
 import {
   Sheet,
   SheetContent,
@@ -25,9 +26,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const DashboardHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout, walletAddress } = useAuth();
+  const { user, logout, publicKey, activeChain } = useAuth();
   const { toast } = useToast();
   const unreadNotifications = 3; // Mock unread count
+
+  // Get wallet address based on active chain
+  const walletAddress = publicKey?.toString() || 'Not connected';
 
   const handleLogout = async () => {
     try {
@@ -107,6 +111,7 @@ export const DashboardHeader = () => {
 
           {/* Actions */}
           <div className="flex items-center space-x-3">
+            <ChainSwitcher />
             <CurrencySwitcher />
             <DarkModeToggle />
             
