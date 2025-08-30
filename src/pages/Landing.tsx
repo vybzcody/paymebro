@@ -24,12 +24,13 @@ import {
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "../hooks/useAuth";
+import { useMultiChainWeb3Auth } from "../contexts/MultiChainWeb3AuthContext";
 
 const Landing = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { login, logout, isAuthenticated, isLoading, isInitialized, error, user } = useAuth();
+  const { login, logout, user, isLoading, isInitialized, error } = useMultiChainWeb3Auth();
+  const isAuthenticated = !!user;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
