@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { toast } from 'sonner';
 import { DollarSign, Zap } from 'lucide-react';
 
 export const RealtimeNotifications = () => {
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
 
   useEffect(() => {
     if (!user?.userId && !user?.id?.match(/^[0-9a-f-]{36}$/i)) return;
