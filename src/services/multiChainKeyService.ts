@@ -84,8 +84,13 @@ export class MultiChainKeyService {
   async getAccountForChain(chainId: CctpNetworkId): Promise<{ address: string; signer?: any }> {
     console.log('Getting account for chain:', chainId, 'type:', typeof chainId);
     
+    // Convert string numbers to actual numbers for comparison
+    const normalizedChainId = typeof chainId === 'string' && !isNaN(Number(chainId)) 
+      ? Number(chainId) as CctpNetworkId 
+      : chainId;
+    
     // Handle Solana (string enum)
-    if (chainId === CctpNetworkId.SOLANA || chainId === 'solana') {
+    if (normalizedChainId === CctpNetworkId.SOLANA || normalizedChainId === 'solana') {
       const solanaAccount = await this.getSolanaAccount();
       return {
         address: solanaAccount.address,
@@ -94,11 +99,11 @@ export class MultiChainKeyService {
     }
 
     // Handle EVM chains (numeric enums)
-    if (chainId === CctpNetworkId.ETHEREUM || chainId === 1 ||
-        chainId === CctpNetworkId.ARBITRUM || chainId === 42161 ||
-        chainId === CctpNetworkId.BASE || chainId === 8453 ||
-        chainId === CctpNetworkId.POLYGON || chainId === 137 ||
-        chainId === CctpNetworkId.AVALANCHE || chainId === 43114) {
+    if (normalizedChainId === CctpNetworkId.ETHEREUM || normalizedChainId === 1 ||
+        normalizedChainId === CctpNetworkId.ARBITRUM || normalizedChainId === 42161 ||
+        normalizedChainId === CctpNetworkId.BASE || normalizedChainId === 8453 ||
+        normalizedChainId === CctpNetworkId.POLYGON || normalizedChainId === 137 ||
+        normalizedChainId === CctpNetworkId.AVALANCHE || normalizedChainId === 43114) {
       const ethAccount = await this.getEthereumAccount();
       return {
         address: ethAccount.address,
@@ -106,7 +111,7 @@ export class MultiChainKeyService {
       };
     }
 
-    throw new Error(`Unsupported chain: ${chainId} (type: ${typeof chainId})`);
+    throw new Error(`Unsupported chain: ${chainId} (type: ${typeof chainId}, normalized: ${normalizedChainId})`);
   }
 
   /**
