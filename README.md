@@ -1,20 +1,23 @@
-# AfriPay - Solana Payment Platform
+# AfriPay - Multi-Chain Payment Platform
 
-**The fastest way to accept Solana payments with Web3Auth integration**
+**The fastest way to accept crypto payments across 6 major blockchains with Web3Auth integration**
 
-AfriPay combines MetaMask Embedded Wallets (Web3Auth) with Solana's speed to create the most user-friendly payment platform for businesses and consumers worldwide.
+AfriPay combines MetaMask Embedded Wallets (Web3Auth) with Solana's lightning-fast network and 5 leading EVM chains to create the most user-friendly payment platform for businesses and consumers worldwide. Built with native USDC support for stable, dollar-denominated transactions across all networks.
 
 ## 🚀 Key Features
 
-### ⚡ Instant Payments
+### ⚡ Multi-Chain Instant Payments
 - **0.4 second confirmations** on Solana network
+- **Cross-chain USDC support** across 6 major networks
+- **Unified payment interface** for Ethereum, Arbitrum, Base, Polygon, Avalanche, and Solana
 - **Real-time payment tracking** with live dashboard
-- **Multi-currency support** (SOL, USDC)
+- **Stable dollar payments** with Circle's USDC integration
 
 ### 🔐 Seamless Authentication
 - **Web3Auth integration** - No seed phrases needed
 - **Social login** (Google, Discord, Twitter)
 - **Seedless wallet creation** in 30 seconds
+- **Multi-chain key derivation** from single login
 
 ### 💰 Business Tools
 - **QR code payments** for mobile transactions
@@ -22,12 +25,14 @@ AfriPay combines MetaMask Embedded Wallets (Web3Auth) with Solana's speed to cre
 - **Payment links** for online sales
 - **Recurring subscriptions** with automated billing
 - **Group payment splitting** for shared expenses
+- **USDC-first pricing** for stable value transactions
 
 ### 📊 Professional Dashboard
 - **Real-time analytics** with live revenue tracking
+- **Multi-chain balance tracking** across all 6 networks
 - **Currency conversion** (USD/SOL/USDC display)
 - **Fee transparency** showing merchant vs platform revenue
-- **Transaction history** with detailed reporting
+- **Transaction history** with detailed cross-chain reporting
 
 ## 🛠 Technology Stack
 
@@ -35,6 +40,8 @@ AfriPay combines MetaMask Embedded Wallets (Web3Auth) with Solana's speed to cre
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Authentication**: Web3Auth (MetaMask Embedded Wallets)
 - **Blockchain**: Solana + Solana Pay
+- **Stablecoin**: Circle USDC + Cross-Chain Transfer Protocol (CCTP)
+- **Multi-Chain**: 6 networks (Ethereum, Arbitrum, Base, Polygon, Avalanche, Solana)
 - **Database**: Supabase (PostgreSQL)
 - **Email**: Resend API
 - **Deployment**: Vercel
