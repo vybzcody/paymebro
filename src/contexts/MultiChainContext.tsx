@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { CctpNetworkId, CctpNetworkAdapter } from '@/lib/cctp/types';
 import { getNetworkById, getSupportedNetworks } from '@/lib/cctp/networks';
-import { useWeb3Auth } from './Web3AuthContext';
+import { useMultiChainWeb3Auth } from './MultiChainWeb3AuthContext';
 
 interface MultiChainContextType {
   activeChain: CctpNetworkId;
@@ -27,12 +27,15 @@ interface MultiChainProviderProps {
 }
 
 export const MultiChainProvider: React.FC<MultiChainProviderProps> = ({ children }) => {
-  const { connection, publicKey } = useWeb3Auth();
-  const [activeChain, setActiveChain] = useState<CctpNetworkId>(CctpNetworkId.SOLANA);
+  const { connection, publicKey, activeChain: currentChain, switchChain: switchActiveChain } = useMultiChainWeb3Auth();
+  const [activeChain, setActiveChain] = useState<CctpNetworkId>(currentChain);
   
   const supportedChains = getSupportedNetworks();
 
   const switchChain = useCallback(async (chainId: CctpNetworkId) => {
+    await switchActiveChain(chainId);
+    setActiveChain(chainId);
+  }, [switchActiveChain]);
     const network = getNetworkById(chainId);
     if (!network) {
       throw new Error(`Unsupported chain: ${chainId}`);

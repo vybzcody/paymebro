@@ -32,7 +32,6 @@ const UniversalPaymentPage = lazy(() => import("./components/UniversalPaymentPag
 import { Layout } from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
 import { BackendTestComponent } from './components/BackendTestComponent';
-import { MultiChainProvider } from './contexts/MultiChainContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -167,22 +166,20 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <MultiChainWeb3AuthProvider>
-      <MultiChainProvider>
-        <CurrencyProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <div className="min-h-screen bg-background">
-                <AppRoutes />
-                <Suspense fallback={null}>
-                  <RealtimeNotifications />
-                </Suspense>
-              </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </CurrencyProvider>
-      </MultiChainProvider>
+      <CurrencyProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="min-h-screen bg-background">
+              <AppRoutes />
+              <Suspense fallback={null}>
+                <RealtimeNotifications />
+              </Suspense>
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
+      </CurrencyProvider>
     </MultiChainWeb3AuthProvider>
   </QueryClientProvider>
 );
