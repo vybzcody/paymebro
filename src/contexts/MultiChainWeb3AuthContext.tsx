@@ -2,69 +2,34 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useMe
 import { WEB3AUTH_NETWORK, CHAIN_NAMESPACES, IProvider } from "@web3auth/base";
 import { Web3Auth } from '@web3auth/modal';
 import { SolanaPrivateKeyProvider } from '@web3auth/solana-provider';
-import { EthereumPrivateKeyProvider } from '@web3auth/ethereum-provider';
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 import { CctpNetworkId } from '@/lib/cctp/types';
 import { getNetworkById } from '@/lib/cctp/networks';
+import { MultiChainKeyService } from '@/services/multiChainKeyService';
 
 const clientId = import.meta.env.VITE_WEB3AUTH_CLIENT_ID || "BHo_Z8iOfv-91EMkE4VRZZyd3xLSPJ8zTGGZDdaMqvVBHBSoy2KLv0te7YojcInFl_EokROy9WElMQGXVjtZBSk";
 
-// Multi-chain configurations
-const chainConfigs = {
-  solana: {
-    chainNamespace: CHAIN_NAMESPACES.SOLANA,
-    chainId: "0x66",
-    rpcTarget: import.meta.env.VITE_SOLANA_RPC_URL || clusterApiUrl('testnet'),
-    displayName: 'Solana Testnet',
-    blockExplorerUrl: 'https://explorer.solana.com?cluster=testnet',
-    ticker: 'SOL',
-    tickerName: 'Solana',
-    logo: 'https://images.toruswallet.io/sol.svg',
-  },
-  ethereum: {
-    chainNamespace: CHAIN_NAMESPACES.EIP155,
-    chainId: "0x1",
-    rpcTarget: import.meta.env.VITE_ETHEREUM_RPC_URL || 'https://mainnet.infura.io/v3/',
-    displayName: 'Ethereum Mainnet',
-    blockExplorerUrl: 'https://etherscan.io',
-    ticker: 'ETH',
-    tickerName: 'Ethereum',
-    logo: 'https://images.toruswallet.io/eth.svg',
-  },
-  arbitrum: {
-    chainNamespace: CHAIN_NAMESPACES.EIP155,
-    chainId: "0xa4b1",
-    rpcTarget: import.meta.env.VITE_ARBITRUM_RPC_URL || 'https://arb1.arbitrum.io/rpc',
-    displayName: 'Arbitrum One',
-    blockExplorerUrl: 'https://arbiscan.io',
-    ticker: 'ETH',
-    tickerName: 'Ethereum',
-    logo: 'https://images.toruswallet.io/arbitrum.svg',
-  },
-  base: {
-    chainNamespace: CHAIN_NAMESPACES.EIP155,
-    chainId: "0x2105",
-    rpcTarget: import.meta.env.VITE_BASE_RPC_URL || 'https://mainnet.base.org',
-    displayName: 'Base',
-    blockExplorerUrl: 'https://basescan.org',
-    ticker: 'ETH',
-    tickerName: 'Ethereum',
-    logo: 'https://images.toruswallet.io/base.svg',
-  }
+// Solana configuration (primary chain)
+const chainConfig = {
+  chainNamespace: CHAIN_NAMESPACES.SOLANA,
+  chainId: "0x66",
+  rpcTarget: import.meta.env.VITE_SOLANA_RPC_URL || clusterApiUrl('testnet'),
+  displayName: 'Solana Testnet',
+  blockExplorerUrl: 'https://explorer.solana.com?cluster=testnet',
+  ticker: 'SOL',
+  tickerName: 'Solana',
+  logo: 'https://images.toruswallet.io/sol.svg',
 };
 
-// Private key providers for each chain
-const privateKeyProviders = {
-  solana: new SolanaPrivateKeyProvider({ config: { chainConfig: chainConfigs.solana } }),
-  ethereum: new EthereumPrivateKeyProvider({ config: { chainConfig: chainConfigs.ethereum } }),
-  arbitrum: new EthereumPrivateKeyProvider({ config: { chainConfig: chainConfigs.arbitrum } }),
-  base: new EthereumPrivateKeyProvider({ config: { chainConfig: chainConfigs.base } }),
-};
+const privateKeyProvider = new SolanaPrivateKeyProvider({
+  config: { chainConfig }
+});
 
 interface ChainWallet {
   provider: IProvider | null;
   address: string | null;
   balance: { native: number; usdc: number };
+  signer?: any; // Chain-specific signer (Keypair for Solana, Wallet for EVM)
 }
 
 interface MultiChainWeb3AuthContextType {
@@ -77,12 +42,14 @@ interface MultiChainWeb3AuthContextType {
   // Multi-chain state
   activeChain: CctpNetworkId;
   wallets: Record<CctpNetworkId, ChainWallet>;
+  keyService: MultiChainKeyService | null;
   
   // Actions
   login: () => Promise<void>;
   logout: () => Promise<void>;
   switchChain: (chainId: CctpNetworkId) => Promise<void>;
   getWalletForChain: (chainId: CctpNetworkId) => ChainWallet | null;
+  refreshBalances: () => Promise<void>;
   
   // Solana specific (backward compatibility)
   connection: Connection;
@@ -111,6 +78,7 @@ export const MultiChainWeb3AuthProvider: React.FC<MultiChainWeb3AuthProviderProp
   const [user, setUser] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeChain, setActiveChain] = useState<CctpNetworkId>(CctpNetworkId.SOLANA);
+  const [keyService, setKeyService] = useState<MultiChainKeyService | null>(null);
   const [wallets, setWallets] = useState<Record<CctpNetworkId, ChainWallet>>({
     [CctpNetworkId.SOLANA]: { provider: null, address: null, balance: { native: 0, usdc: 0 } },
     [CctpNetworkId.ETHEREUM]: { provider: null, address: null, balance: { native: 0, usdc: 0 } },
@@ -120,7 +88,7 @@ export const MultiChainWeb3AuthProvider: React.FC<MultiChainWeb3AuthProviderProp
     [CctpNetworkId.AVALANCHE]: { provider: null, address: null, balance: { native: 0, usdc: 0 } },
   });
 
-  const connection = useMemo(() => new Connection(chainConfigs.solana.rpcTarget, 'confirmed'), []);
+  const connection = useMemo(() => new Connection(chainConfig.rpcTarget, 'confirmed'), []);
   const publicKey = useMemo(() => {
     const solanaWallet = wallets[CctpNetworkId.SOLANA];
     return solanaWallet.address ? new PublicKey(solanaWallet.address) : null;
@@ -144,8 +112,12 @@ export const MultiChainWeb3AuthProvider: React.FC<MultiChainWeb3AuthProviderProp
       const userInfo = await web3auth.getUserInfo();
       setUser(userInfo);
 
+      // Initialize key service
+      const keyServiceInstance = new MultiChainKeyService(web3authProvider);
+      setKeyService(keyServiceInstance);
+
       // Initialize wallets for all chains
-      await initializeAllChainWallets(web3authProvider);
+      await initializeAllChainWallets(web3authProvider, keyServiceInstance);
 
       console.log('Multi-chain login successful');
     } catch (err: any) {
@@ -162,6 +134,7 @@ export const MultiChainWeb3AuthProvider: React.FC<MultiChainWeb3AuthProviderProp
       setError(null);
       await web3auth.logout();
       setUser(null);
+      setKeyService(null);
       setWallets({
         [CctpNetworkId.SOLANA]: { provider: null, address: null, balance: { native: 0, usdc: 0 } },
         [CctpNetworkId.ETHEREUM]: { provider: null, address: null, balance: { native: 0, usdc: 0 } },
@@ -190,54 +163,45 @@ export const MultiChainWeb3AuthProvider: React.FC<MultiChainWeb3AuthProviderProp
     return wallets[chainId] || null;
   }, [wallets]);
 
-  const initializeAllChainWallets = async (provider: IProvider) => {
-    const newWallets = { ...wallets };
+  const refreshBalances = useCallback(async () => {
+    if (!keyService) return;
 
+    // TODO: Implement balance fetching for each chain
+    console.log('Refreshing balances for all chains...');
+  }, [keyService]);
+
+  const initializeAllChainWallets = async (provider: IProvider, keyServiceInstance: MultiChainKeyService) => {
     try {
-      // Initialize Solana wallet
-      if (provider) {
-        const solanaAccounts = await provider.request({ method: 'getAccounts' }) as string[];
-        if (solanaAccounts.length > 0) {
-          newWallets[CctpNetworkId.SOLANA] = {
-            provider,
-            address: solanaAccounts[0],
-            balance: { native: 0, usdc: 0 }
-          };
-        }
-      }
-
-      // For EVM chains, we'll derive addresses from the same private key
-      // This is a simplified approach - in production, you'd want proper multi-chain derivation
-      const evmChains = [CctpNetworkId.ETHEREUM, CctpNetworkId.ARBITRUM, CctpNetworkId.BASE];
+      console.log('Initializing wallets for all chains...');
       
-      for (const chainId of evmChains) {
-        try {
-          // Get private key and derive EVM address
-          const privateKey = await provider.request({ method: 'private_key' });
-          if (privateKey) {
-            // Derive EVM address from private key (simplified)
-            const evmAddress = await deriveEVMAddress(privateKey);
-            newWallets[chainId] = {
-              provider: null, // Will be set when switching to this chain
-              address: evmAddress,
-              balance: { native: 0, usdc: 0 }
-            };
-          }
-        } catch (error) {
-          console.warn(`Failed to initialize ${chainId} wallet:`, error);
+      // Get all accounts using proper key derivation
+      const accounts = await keyServiceInstance.getAllAccounts();
+      
+      const newWallets = { ...wallets };
+
+      // Initialize each chain wallet
+      for (const [chainId, address] of Object.entries(accounts)) {
+        if (address) {
+          const chainKey = chainId as CctpNetworkId;
+          const { signer } = await keyServiceInstance.getAccountForChain(chainKey);
+          
+          newWallets[chainKey] = {
+            provider: chainKey === CctpNetworkId.SOLANA ? provider : null,
+            address,
+            balance: { native: 0, usdc: 0 },
+            signer
+          };
+          
+          console.log(`Initialized ${chainKey} wallet: ${address.slice(0, 8)}...`);
         }
       }
 
       setWallets(newWallets);
+      console.log('All chain wallets initialized successfully');
     } catch (error) {
       console.error('Failed to initialize chain wallets:', error);
+      setError('Failed to initialize multi-chain wallets');
     }
-  };
-
-  const deriveEVMAddress = async (privateKey: string): Promise<string> => {
-    // Simplified EVM address derivation
-    // In production, use proper cryptographic derivation
-    return '0x' + privateKey.slice(-40);
   };
 
   useEffect(() => {
@@ -250,8 +214,8 @@ export const MultiChainWeb3AuthProvider: React.FC<MultiChainWeb3AuthProviderProp
           web3auth = new Web3Auth({
             clientId,
             web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
-            chainConfig: chainConfigs.solana, // Default to Solana
-            privateKeyProvider: privateKeyProviders.solana,
+            chainConfig,
+            privateKeyProvider,
             uiConfig: {
               appName: 'AfriPay',
               appUrl: import.meta.env.VITE_APP_URL || 'http://localhost:8080',
@@ -274,7 +238,11 @@ export const MultiChainWeb3AuthProvider: React.FC<MultiChainWeb3AuthProviderProp
           console.log('Restoring multi-chain session...');
           const userInfo = await web3auth.getUserInfo();
           setUser(userInfo);
-          await initializeAllChainWallets(web3auth.provider);
+          
+          const keyServiceInstance = new MultiChainKeyService(web3auth.provider);
+          setKeyService(keyServiceInstance);
+          
+          await initializeAllChainWallets(web3auth.provider, keyServiceInstance);
         }
 
       } catch (err: any) {
@@ -295,13 +263,15 @@ export const MultiChainWeb3AuthProvider: React.FC<MultiChainWeb3AuthProviderProp
     error,
     activeChain,
     wallets,
+    keyService,
     login,
     logout,
     switchChain,
     getWalletForChain,
+    refreshBalances,
     connection,
     publicKey,
-  }), [isLoading, isInitialized, user, error, activeChain, wallets, login, logout, switchChain, getWalletForChain, connection, publicKey]);
+  }), [isLoading, isInitialized, user, error, activeChain, wallets, keyService, login, logout, switchChain, getWalletForChain, refreshBalances, connection, publicKey]);
 
   return (
     <MultiChainWeb3AuthContext.Provider value={contextValue}>

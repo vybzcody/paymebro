@@ -60,6 +60,7 @@
     "@web3auth/ethereum-provider": "^9.7.0",
     "@web3auth/no-modal": "^9.7.0",
     "axios": "^1.8.1",
+    "ethers": "^6.13.0",
     "viem": "^2.31.0",
     "wagmi": "^2.15.6",
     "bignumber.js": "^9.3.1",
