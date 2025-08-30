@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Bell, Menu, Settings, User, HelpCircle, Users, CreditCard, LogOut, Wallet } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "../hooks/useMultiChainAuth";
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { DarkModeToggle } from "./DarkModeToggle";
@@ -26,7 +26,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const DashboardHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout, publicKey, activeChain } = useAuth();
+  const { user, logout, activeChain, wallets } = useMultiChainWeb3Auth();
+  const publicKey = wallets?.solana?.publicKey;
   const { toast } = useToast();
   const unreadNotifications = 3; // Mock unread count
 

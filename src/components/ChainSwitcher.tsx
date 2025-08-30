@@ -2,14 +2,15 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useMultiChainAuth } from '@/hooks/useMultiChainAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { getSupportedNetworks } from '@/lib/cctp/networks';
 import { CctpNetworkId } from '@/lib/cctp/types';
 import { Wallet, ChevronDown, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const ChainSwitcher: React.FC = () => {
-  const { activeChain, switchChain, wallets, isAuthenticated } = useMultiChainAuth();
+  const { activeChain, switchChain, wallets, user } = useMultiChainWeb3Auth();
+  const isAuthenticated = !!user;
   const supportedNetworks = getSupportedNetworks();
 
   if (!isAuthenticated) {

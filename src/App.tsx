@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { MultiChainWeb3AuthProvider } from './contexts/MultiChainWeb3AuthContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
-import { useAuth } from './hooks/useMultiChainAuth';
+import { useMultiChainWeb3Auth } from './contexts/MultiChainWeb3AuthContext';
 import { Suspense, lazy } from 'react';
 
 // Lazy load pages for better performance
@@ -44,7 +44,8 @@ const queryClient = new QueryClient({
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useMultiChainWeb3Auth();
+  const isAuthenticated = !!user;
 
   if (isLoading) {
     return <LoadingSpinner text="Connecting to your wallet..." />;
