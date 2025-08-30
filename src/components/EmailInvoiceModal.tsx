@@ -34,7 +34,14 @@ export const EmailInvoiceModal = ({ isOpen, onClose, onSuccess }: EmailInvoiceMo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user?.userId && !user?.id) {
+    console.log('EmailInvoiceModal - User object:', user);
+    console.log('EmailInvoiceModal - user.userId:', user?.userId);
+    console.log('EmailInvoiceModal - user.id:', user?.id);
+    
+    // Web3Auth user object might have different properties
+    const userId = user?.userId || user?.id || user?.sub || user?.email;
+    
+    if (!userId) {
       toast.error('Please log in to create invoices');
       return;
     }
@@ -46,7 +53,7 @@ export const EmailInvoiceModal = ({ isOpen, onClose, onSuccess }: EmailInvoiceMo
 
     setLoading(true);
     try {
-      const userId = user.userId || user.id;
+      const userId = user?.userId || user?.id || user?.sub || user?.email;
       const invoice = await invoiceService.createInvoice({
         userId,
         customerName: formData.customerName,
