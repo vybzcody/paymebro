@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Calendar, Repeat, DollarSign } from "lucide-react";
-import { useAuth } from '@/hooks/useAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { toast } from 'sonner';
 
 interface SubscriptionModalProps {
@@ -16,7 +16,7 @@ interface SubscriptionModalProps {
 }
 
 export const SubscriptionModal = ({ isOpen, onClose, onSuccess }: SubscriptionModalProps) => {
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',

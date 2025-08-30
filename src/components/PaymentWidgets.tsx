@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, Calendar, Zap } from "lucide-react";
-import { useAuth } from '@/hooks/useAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 
 export const PaymentWidgets = () => {
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
   const [todayRevenue, setTodayRevenue] = useState(0);
   const [weekRevenue, setWeekRevenue] = useState(0);
   const [weeklyGoal] = useState(500); // $500 weekly goal

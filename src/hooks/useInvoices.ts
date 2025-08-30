@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from './useAuth'
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext'
 
 export interface Invoice {
   id: string
@@ -22,7 +22,7 @@ export const useInvoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user } = useAuth()
+  const { user } = useMultiChainWeb3Auth()
 
   const fetchInvoices = async () => {
     if (!user?.userId && !user?.id?.match(/^[0-9a-f-]{36}$/i)) return

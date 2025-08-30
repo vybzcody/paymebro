@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from './useAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { toast } from 'sonner';
 
 export interface Transaction {
@@ -16,7 +16,7 @@ export interface Transaction {
 }
 
 export const useRealtimeTransactions = () => {
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
 

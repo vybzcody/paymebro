@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { useRealtimeAnalytics } from '@/hooks/useRealtimeAnalytics';
 import { AnalyticsFilters } from '@/hooks/useAnalytics';
 import { RevenueMetrics } from '@/components/analytics/RevenueMetrics';
@@ -19,7 +19,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { toast } from 'sonner';
 
 export const Dashboard = () => {
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
   const [filters, setFilters] = useState<AnalyticsFilters>({
     dateRange: 'month',
     currency: 'all',

@@ -8,11 +8,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { getSupportedNetworks } from '@/lib/cctp/networks';
 import { CctpNetworkId } from '@/lib/cctp/types';
 import { createPaymentLink } from '@/services/businessService';
-import { useAuth } from '@/hooks/useAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { toast } from 'sonner';
 
 export const MultiChainPaymentForm: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [preferredChain, setPreferredChain] = useState<CctpNetworkId>(CctpNetworkId.SOLANA);

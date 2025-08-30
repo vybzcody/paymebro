@@ -28,7 +28,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 export const QRGenerator = () => {
   const { toast } = useToast();
-  const { publicKey, user } = useAuth();
+  const { user, wallets } = useMultiChainWeb3Auth();
+  const publicKey = wallets?.solana?.publicKey;
   const {
     paymentState,
     createAndMonitorPayment,

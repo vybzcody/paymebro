@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mail, Send, FileText } from "lucide-react";
-import { useAuth } from '@/hooks/useAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { invoiceService } from '@/services/invoiceService';
 import { toast } from 'sonner';
 
@@ -18,7 +18,7 @@ interface EmailInvoiceModalProps {
 }
 
 export const EmailInvoiceModal = ({ isOpen, onClose, onSuccess }: EmailInvoiceModalProps) => {
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',

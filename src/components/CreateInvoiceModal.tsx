@@ -41,7 +41,7 @@ interface CreateInvoiceModalProps {
 
 export const CreateInvoiceModal = ({ isOpen, onClose }: CreateInvoiceModalProps) => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
   const [currentStep, setCurrentStep] = useState(1);
   const [invoiceData, setInvoiceData] = useState({
     customerName: "",

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, Plus, Trash2, DollarSign } from "lucide-react";
-import { useAuth } from '@/hooks/useAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { toast } from 'sonner';
 
 interface GroupMember {
@@ -22,7 +22,7 @@ interface GroupPaymentModalProps {
 }
 
 export const GroupPaymentModal = ({ isOpen, onClose, onSuccess }: GroupPaymentModalProps) => {
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
