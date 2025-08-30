@@ -11,6 +11,8 @@ import { Suspense, lazy } from 'react';
 // Lazy load pages for better performance
 const Landing = lazy(() => import("./pages/Landing"));
 const Index = lazy(() => import("./pages/Index"));
+const QRCodes = lazy(() => import("./pages/QRCodes"));
+const PaymentLinks = lazy(() => import("./pages/PaymentLinks"));
 const Invoices = lazy(() => import("./pages/Invoices"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const RealtimeNotifications = lazy(() => import("./components/RealtimeNotifications"));
@@ -70,6 +72,18 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Index />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/qr-codes" element={
+          <ProtectedRoute>
+            <QRCodes />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/payment-links" element={
+          <ProtectedRoute>
+            <PaymentLinks />
           </ProtectedRoute>
         } />
 

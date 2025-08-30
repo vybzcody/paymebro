@@ -34,7 +34,7 @@ export const EmailInvoiceModal = ({ isOpen, onClose, onSuccess }: EmailInvoiceMo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user?.userId && !user?.id?.match(/^[0-9a-f-]{36}$/i)) {
+    if (!user?.userId && !user?.id) {
       toast.error('Please log in to create invoices');
       return;
     }

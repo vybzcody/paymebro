@@ -51,7 +51,7 @@ export const Dashboard = () => {
       title: "Create QR Code",
       description: "Generate a new payment QR code",
       icon: QrCode,
-      href: "/dashboard",
+      href: "/qr-codes",
       color: "bg-blue-500"
     },
     {
