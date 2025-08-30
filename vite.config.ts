@@ -42,6 +42,9 @@ export default defineConfig(({ mode }) => ({
           'web3auth': ['@web3auth/modal', '@web3auth/base', '@web3auth/solana-provider']
         }
       }
+    },
+    commonjsOptions: {
+      transformMixedEsModules: true
     }
   }
 }));
