@@ -50,8 +50,17 @@ export class MultiChainKeyService {
    */
   async getEthereumAccount(): Promise<{ address: string; wallet: ethers.Wallet }> {
     try {
-      const privateKey = await this.getPrivateKey();
-      const wallet = new ethers.Wallet(privateKey);
+      const privateKeyHex = await this.getPrivateKey();
+      
+      // Ensure private key has 0x prefix for ethers.js
+      const formattedPrivateKey = privateKeyHex.startsWith('0x') ? privateKeyHex : `0x${privateKeyHex}`;
+      
+      // Validate private key length (64 hex chars + 0x = 66 total)
+      if (formattedPrivateKey.length !== 66) {
+        throw new Error(`Invalid private key length: ${formattedPrivateKey.length}`);
+      }
+      
+      const wallet = new ethers.Wallet(formattedPrivateKey);
       
       return {
         address: wallet.address,

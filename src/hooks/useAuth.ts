@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useWeb3Auth } from '../contexts/Web3AuthContext';
+import { useMultiChainWeb3Auth } from "@/hooks/useAuth";
 
 interface AuthUser {
   id: string;
@@ -19,7 +19,7 @@ export const useAuth = () => {
     isLoading: web3Loading,
     isInitialized,
     error: web3Error
-  } = useWeb3Auth();
+  } = useMultiChainWeb3Auth();
   
   const [user, setUser] = useState<AuthUser | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useWeb3Auth } from "@/contexts/Web3AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { createInvoice } from "@/services/businessService";
 
 interface InvoiceItem {
@@ -41,7 +41,7 @@ interface CreateInvoiceModalProps {
 
 export const CreateInvoiceModal = ({ isOpen, onClose }: CreateInvoiceModalProps) => {
   const { toast } = useToast();
-  const { user } = useWeb3Auth();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [invoiceData, setInvoiceData] = useState({
     customerName: "",

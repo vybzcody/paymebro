@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useWeb3Auth } from '@/contexts/Web3AuthContext'
+import { useMultiChainWeb3Auth } from "@/hooks/useAuth";
 
 export interface PaymentLink {
   id: string
@@ -21,7 +21,7 @@ export const usePaymentLinks = () => {
   const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user, publicKey } = useWeb3Auth()
+  const { user, publicKey } = useMultiChainWeb3Auth()
 
   const fetchPaymentLinks = async () => {
     const walletAddress = user?.walletAddress || publicKey?.toString()

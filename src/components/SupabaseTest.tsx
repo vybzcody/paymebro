@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { supabase } from '@/lib/supabase'
-import { useWeb3Auth } from '@/contexts/Web3AuthContext'
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from 'sonner'
 
 export const SupabaseTest = () => {
-  const { user } = useWeb3Auth()
+  const { user } = useAuth()
   const [testResults, setTestResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
