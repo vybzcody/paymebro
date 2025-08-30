@@ -6,14 +6,14 @@ import { Label } from "@/components/ui/label";
 import { QrCode, Send, CreditCard, TrendingUp, Users, DollarSign, Wallet, Zap, Clock, Link, Copy, Plus } from "lucide-react";
 import { StatCard } from "./StatCard";
 import { QRGenerator } from "./QRGenerator";
-import { useWeb3Auth } from "@/contexts/Web3AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useSolanaPay } from "@/hooks/useSolanaPay";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getBusinessMetrics, createPaymentLink, getPaymentLinks, type BusinessMetrics, type PaymentLink } from "@/services/businessService";
 
 export const Dashboard = () => {
-  const { user, publicKey } = useWeb3Auth();
+  const { user, publicKey } = useAuth();
   const { paymentStatus } = useSolanaPay();
   
   const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>([]);

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase, type Transaction } from '@/lib/supabase'
-import { useWeb3Auth } from '@/contexts/Web3AuthContext'
+import { useAuth } from "@/hooks/useAuth";
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user, publicKey } = useWeb3Auth()
+  const { user, publicKey } = useAuth()
 
   // Fetch transactions
   const fetchTransactions = async () => {

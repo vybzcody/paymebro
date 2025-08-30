@@ -24,11 +24,11 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSolanaPayOfficial, PaymentData } from "@/hooks/useSolanaPayOfficial";
-import { useWeb3Auth } from "@/contexts/Web3AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export const QRGenerator = () => {
   const { toast } = useToast();
-  const { publicKey, user } = useWeb3Auth();
+  const { publicKey, user } = useAuth();
   const {
     paymentState,
     createAndMonitorPayment,

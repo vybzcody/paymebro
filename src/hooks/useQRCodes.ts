@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useWeb3Auth } from '@/contexts/Web3AuthContext'
+import { useAuth } from "@/hooks/useAuth";
 
 export interface QRCode {
   id: string
@@ -21,7 +21,7 @@ export const useQRCodes = () => {
   const [qrCodes, setQRCodes] = useState<QRCode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user, publicKey } = useWeb3Auth()
+  const { user, publicKey } = useAuth()
 
   const fetchQRCodes = async () => {
     const walletAddress = user?.walletAddress || publicKey?.toString()

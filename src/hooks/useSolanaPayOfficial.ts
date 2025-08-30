@@ -7,7 +7,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { useToast } from '@/hooks/use-toast';
-import { useWeb3Auth } from '@/contexts/Web3AuthContext';
+import { useMultiChainWeb3Auth } from "@/hooks/useAuth";
 import { 
   solanaPayService, 
   PaymentRequest, 
@@ -50,7 +50,7 @@ export interface PaymentState {
 
 export const useSolanaPayOfficial = () => {
   const { toast } = useToast();
-  const { publicKey, user, isLoading: authLoading } = useWeb3Auth();
+  const { publicKey, user, isLoading: authLoading } = useAuth();
   const [paymentState, setPaymentState] = useState<PaymentState>({ status: 'idle' });
   const [isBackendHealthy, setIsBackendHealthy] = useState(false);
 
