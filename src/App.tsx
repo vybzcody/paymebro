@@ -11,11 +11,8 @@ import { Suspense, lazy } from 'react';
 // Lazy load pages for better performance
 const Landing = lazy(() => import("./pages/Landing"));
 const Index = lazy(() => import("./pages/Index"));
-const PaymentLinks = lazy(() => import("./pages/PaymentLinks"));
-const Transactions = lazy(() => import("./pages/Transactions"));
 const Invoices = lazy(() => import("./pages/Invoices"));
 const Notifications = lazy(() => import("./pages/Notifications"));
-const QRCodes = lazy(() => import("./pages/QRCodes"));
 const RealtimeNotifications = lazy(() => import("./components/RealtimeNotifications"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -73,24 +70,6 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Index />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/payment-links" element={
-          <ProtectedRoute>
-            <PaymentLinks />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/transactions" element={
-          <ProtectedRoute>
-            <Transactions />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/qr-codes" element={
-          <ProtectedRoute>
-            <QRCodes />
           </ProtectedRoute>
         } />
 

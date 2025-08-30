@@ -51,9 +51,6 @@ export const DashboardHeader = () => {
 
   const navigationItems = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/payment-links", label: "Payment Links" },
-    { href: "/transactions", label: "Transactions" },
-    { href: "/qr-codes", label: "QR Codes" },
     { href: "/invoices", label: "Invoices" },
     { href: "/customers", label: "Customers" },
     { href: "/analytics", label: "Analytics" },
