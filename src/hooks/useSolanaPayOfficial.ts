@@ -50,9 +50,13 @@ export interface PaymentState {
 
 export const useSolanaPayOfficial = () => {
   const { toast } = useToast();
-  const { publicKey, user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, wallets } = useMultiChainWeb3Auth();
   const [paymentState, setPaymentState] = useState<PaymentState>({ status: 'idle' });
   const [isBackendHealthy, setIsBackendHealthy] = useState(false);
+
+  // Get Solana wallet
+  const solanaWallet = wallets?.solana;
+  const publicKey = solanaWallet?.publicKey;
 
   // Check backend health on mount
   useEffect(() => {
