@@ -179,20 +179,21 @@ export const MultiChainWeb3AuthProvider: React.FC<MultiChainWeb3AuthProviderProp
       
       const newWallets = { ...wallets };
 
-      // Initialize each chain wallet
-      for (const [chainId, address] of Object.entries(accounts)) {
+      // Initialize each chain wallet with proper type conversion
+      for (const [chainIdStr, address] of Object.entries(accounts)) {
         if (address) {
-          const chainKey = chainId as CctpNetworkId;
-          const { signer } = await keyServiceInstance.getAccountForChain(chainKey);
+          // Convert string key back to proper CctpNetworkId
+          const chainId = chainIdStr as CctpNetworkId;
+          const { signer } = await keyServiceInstance.getAccountForChain(chainId);
           
-          newWallets[chainKey] = {
-            provider: chainKey === CctpNetworkId.SOLANA ? provider : null,
+          newWallets[chainId] = {
+            provider: chainId === CctpNetworkId.SOLANA ? provider : null,
             address,
             balance: { native: 0, usdc: 0 },
             signer
           };
           
-          console.log(`Initialized ${chainKey} wallet: ${address.slice(0, 8)}...`);
+          console.log(`Initialized ${chainId} wallet: ${address.slice(0, 8)}...`);
         }
       }
 
