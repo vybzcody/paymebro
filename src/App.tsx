@@ -31,7 +31,6 @@ const UniversalPaymentPage = lazy(() => import("./components/UniversalPaymentPag
 // Components
 import { Layout } from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
-import { BackendTestComponent } from './components/BackendTestComponent';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -146,13 +145,6 @@ const AppRoutes = () => {
         <Route path="/help" element={
           <ProtectedRoute>
             <Help />
-          </ProtectedRoute>
-        } />
-
-        {/* Backend Test Route - Development Only */}
-        <Route path="/test-backend" element={
-          <ProtectedRoute>
-            <BackendTestComponent />
           </ProtectedRoute>
         } />
 
