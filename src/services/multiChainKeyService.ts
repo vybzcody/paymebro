@@ -52,12 +52,18 @@ export class MultiChainKeyService {
     try {
       const privateKeyHex = await this.getPrivateKey();
       
-      // Ensure private key has 0x prefix for ethers.js
-      const formattedPrivateKey = privateKeyHex.startsWith('0x') ? privateKeyHex : `0x${privateKeyHex}`;
+      // Remove '0x' prefix if present
+      const cleanHex = privateKeyHex.startsWith('0x') ? privateKeyHex.slice(2) : privateKeyHex;
       
-      // Validate private key length (64 hex chars + 0x = 66 total)
+      // Take only the first 64 characters (32 bytes) for Ethereum private key
+      const ethPrivateKey = cleanHex.slice(0, 64);
+      
+      // Add 0x prefix for ethers.js
+      const formattedPrivateKey = `0x${ethPrivateKey}`;
+      
+      // Validate private key length (should be 66 chars with 0x prefix)
       if (formattedPrivateKey.length !== 66) {
-        throw new Error(`Invalid private key length: ${formattedPrivateKey.length}`);
+        throw new Error(`Invalid private key length after formatting: ${formattedPrivateKey.length}`);
       }
       
       const wallet = new ethers.Wallet(formattedPrivateKey);
