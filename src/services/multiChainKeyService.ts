@@ -1,5 +1,4 @@
 import { IProvider } from '@web3auth/base';
-import { getED25519Key } from '@web3auth/solana-provider';
 import { Keypair } from '@solana/web3.js';
 import { ethers } from 'ethers';
 import { CctpNetworkId } from '@/lib/cctp/types';
@@ -20,13 +19,21 @@ export class MultiChainKeyService {
 
   /**
    * Get Solana account from Web3Auth private key
+   * Using direct private key approach since getED25519Key is not available in our version
    */
   async getSolanaAccount(): Promise<{ address: string; keypair: Keypair }> {
     try {
-      const ethPrivateKey = await this.getPrivateKey();
-      const privateKey = getED25519Key(ethPrivateKey).sk.toString('hex');
-      const secretKey = new Uint8Array(Buffer.from(privateKey, 'hex'));
-      const keypair = Keypair.fromSecretKey(secretKey);
+      const privateKeyHex = await this.getPrivateKey();
+      
+      // Convert hex private key to Uint8Array for Solana
+      // Remove '0x' prefix if present
+      const cleanHex = privateKeyHex.startsWith('0x') ? privateKeyHex.slice(2) : privateKeyHex;
+      
+      // Take first 32 bytes for Solana private key
+      const privateKeyBytes = new Uint8Array(Buffer.from(cleanHex.slice(0, 64), 'hex'));
+      
+      // Create Solana keypair
+      const keypair = Keypair.fromSeed(privateKeyBytes);
       
       return {
         address: keypair.publicKey.toBase58(),
