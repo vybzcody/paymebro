@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSolanaPayOfficial, PaymentData } from "@/hooks/useSolanaPayOfficial";
-import { useAuth } from "@/hooks/useAuth";
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 
 export const QRGenerator = () => {
   const { toast } = useToast();
