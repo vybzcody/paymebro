@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useMultiChainWeb3Auth } from "@/hooks/useAuth";
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 
 export interface PaymentLink {
   id: string

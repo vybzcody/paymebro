@@ -1,4 +1,4 @@
-import { useMultiChainWeb3Auth } from "@/hooks/useAuth";
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { CctpNetworkId } from '@/lib/cctp/types';
 
 /**

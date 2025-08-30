@@ -7,7 +7,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { useToast } from '@/hooks/use-toast';
-import { useMultiChainWeb3Auth } from "@/hooks/useAuth";
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { 
   solanaPayService, 
   PaymentRequest, 
