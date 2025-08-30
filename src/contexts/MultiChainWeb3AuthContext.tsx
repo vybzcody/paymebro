@@ -227,6 +227,7 @@ export const MultiChainWeb3AuthProvider: React.FC<MultiChainWeb3AuthProviderProp
               theme: { primary: '#10b981' },
               useLogoLoader: true,
               modalZIndex: '99999',
+              uxMode: 'redirect', // Fix Cross-Origin-Opener-Policy issues
             },
           });
         }
