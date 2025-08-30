@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from "@/hooks/useAuth";
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext'
 
 export interface QRCode {
   id: string
@@ -21,7 +21,7 @@ export const useQRCodes = () => {
   const [qrCodes, setQRCodes] = useState<QRCode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user, publicKey } = useAuth()
+  const { user, wallets } = useMultiChainWeb3Auth()
 
   const fetchQRCodes = async () => {
     const walletAddress = user?.walletAddress || publicKey?.toString()

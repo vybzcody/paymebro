@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase, type Transaction } from '@/lib/supabase'
-import { useAuth } from "@/hooks/useAuth";
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext'
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user, publicKey } = useAuth()
+  const { user, wallets } = useMultiChainWeb3Auth()
 
   // Fetch transactions
   const fetchTransactions = async () => {

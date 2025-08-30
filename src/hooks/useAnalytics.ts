@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from './useAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 
 export interface AnalyticsFilters {
   dateRange: 'today' | 'week' | 'month' | 'year' | 'custom';
@@ -20,7 +20,7 @@ export interface RevenueMetrics {
 }
 
 export const useAnalytics = (filters: AnalyticsFilters) => {
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
   const [metrics, setMetrics] = useState<RevenueMetrics>({
     totalRevenue: 0,
     totalTransactions: 0,

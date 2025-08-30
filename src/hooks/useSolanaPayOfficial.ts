@@ -260,12 +260,12 @@ export const useSolanaPayOfficial = () => {
   /**
    * Check if wallet is connected
    */
-  const isWalletConnected = !authLoading && !!publicKey;
+  const isWalletConnected = !authLoading && !!publicKey && !!user;
 
   /**
    * Get wallet address
    */
-  const walletAddress = publicKey?.toString();
+  const walletAddress = publicKey;
 
   return {
     // State

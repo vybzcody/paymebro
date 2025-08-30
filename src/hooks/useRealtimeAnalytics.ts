@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from './useAuth';
+import { useMultiChainWeb3Auth } from '@/contexts/MultiChainWeb3AuthContext';
 import { AnalyticsFilters, RevenueMetrics } from './useAnalytics';
 
 export const useRealtimeAnalytics = (filters: AnalyticsFilters) => {
-  const { user } = useAuth();
+  const { user } = useMultiChainWeb3Auth();
   const [metrics, setMetrics] = useState<RevenueMetrics>({
     totalRevenue: 0,
     totalTransactions: 0,
