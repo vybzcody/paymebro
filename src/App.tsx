@@ -25,10 +25,14 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Billing = lazy(() => import("./pages/Billing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+// Multi-chain components
+const UniversalPaymentPage = lazy(() => import("./components/UniversalPaymentPage"));
+
 // Components
 import { Layout } from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
 import { BackendTestComponent } from './components/BackendTestComponent';
+import { MultiChainProvider } from './contexts/MultiChainContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +67,9 @@ const AppRoutes = () => {
       <Routes>
         {/* Public Routes - Landing page is now default */}
         <Route path="/" element={<Landing />} />
+        
+        {/* Universal Payment Route - Public */}
+        <Route path="/pay/:paymentId" element={<UniversalPaymentPage />} />
 
         {/* Protected Dashboard Routes */}
         <Route path="/dashboard" element={
@@ -160,20 +167,22 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <Web3AuthProvider>
-      <CurrencyProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <div className="min-h-screen bg-background">
-              <AppRoutes />
-              <Suspense fallback={null}>
-                <RealtimeNotifications />
-              </Suspense>
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
-      </CurrencyProvider>
+      <MultiChainProvider>
+        <CurrencyProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <div className="min-h-screen bg-background">
+                <AppRoutes />
+                <Suspense fallback={null}>
+                  <RealtimeNotifications />
+                </Suspense>
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </CurrencyProvider>
+      </MultiChainProvider>
     </Web3AuthProvider>
   </QueryClientProvider>
 );

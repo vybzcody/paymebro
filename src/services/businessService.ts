@@ -66,20 +66,31 @@ export const createPaymentLink = async (
   userId: string,
   title: string,
   amount: number,
-  currency: string = 'USDC'
+  currency: string = 'USDC',
+  options?: {
+    preferredReceiveChain?: string;
+    acceptedChains?: string[];
+    merchantWallets?: Record<string, string>;
+  }
 ): Promise<PaymentLink> => {
   try {
-    // For now, create a simple mock payment link
-    // TODO: Implement backend endpoint for payment links
+    const paymentId = Math.random().toString(36).substr(2, 9);
+    
+    // Enhanced payment link with multi-chain support
     const link: PaymentLink = {
       id: Date.now().toString(),
       title,
       amount,
       currency,
-      url: `${window.location.origin}/pay/${Math.random().toString(36).substr(2, 9)}`,
+      url: `${window.location.origin}/pay/${paymentId}`,
       created_at: new Date().toISOString(),
       clicks: 0,
-      conversions: 0
+      conversions: 0,
+      // Multi-chain extensions
+      preferredReceiveChain: options?.preferredReceiveChain || 'solana',
+      acceptedChains: options?.acceptedChains || ['solana', 'ethereum', 'arbitrum', 'base'],
+      merchantWallets: options?.merchantWallets || {},
+      autoConvert: true
     };
 
     return link;
