@@ -7,7 +7,6 @@ import { AnalyticsFilters as FiltersComponent } from '@/components/analytics/Ana
 import { CurrencyBreakdown } from '@/components/analytics/CurrencyBreakdown';
 import { SubscriptionModal } from '@/components/SubscriptionModal';
 import { GroupPaymentModal } from '@/components/GroupPaymentModal';
-import { PaymentTemplates } from '@/components/PaymentTemplates';
 import { PaymentWidgets } from '@/components/PaymentWidgets';
 import { FeeBreakdown } from '@/components/FeeBreakdown';
 import { SuccessAnimation } from '@/components/SuccessAnimation';
@@ -39,7 +38,7 @@ export const Dashboard = () => {
     console.log('Scanned QR data:', data);
     toast.success('Payment QR code scanned successfully!');
     setShowSpeedCounter(true);
-    
+
     // Simulate payment processing
     setTimeout(() => {
       setShowSpeedCounter(false);
@@ -93,10 +92,10 @@ export const Dashboard = () => {
   return (
     <div className="space-y-6">
       <SuccessAnimation show={showSuccess} />
-      
+
       {/* Transaction Speed Counter */}
       {showSpeedCounter && (
-        <TransactionSpeedCounter 
+        <TransactionSpeedCounter
           isActive={showSpeedCounter}
           onComplete={() => setShowSpeedCounter(false)}
         />
@@ -130,8 +129,38 @@ export const Dashboard = () => {
       {/* Payment Widgets */}
       <PaymentWidgets />
 
-      {/* Quick Payment Templates */}
-      <PaymentTemplates />
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            {quickActions.map((action) => (
+              <RouterLink
+                key={action.title}
+                to={action.href}
+                className="group p-4 border rounded-lg hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start space-x-3">
+                  <div className={`p-2 rounded-lg ${action.color} text-white`}>
+                    <action.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium group-hover:text-blue-600 transition-colors">
+                      {action.title}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {action.description}
+                    </p>
+                  </div>
+                </div>
+              </RouterLink>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* Analytics Filters */}
       <FiltersComponent filters={filters} onFiltersChange={setFilters} />
@@ -222,37 +251,6 @@ export const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            {quickActions.map((action) => (
-              <RouterLink
-                key={action.title}
-                to={action.href}
-                className="group p-4 border rounded-lg hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start space-x-3">
-                  <div className={`p-2 rounded-lg ${action.color} text-white`}>
-                    <action.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium group-hover:text-blue-600 transition-colors">
-                      {action.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {action.description}
-                    </p>
-                  </div>
-                </div>
-              </RouterLink>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Modals */}
       <SubscriptionModal
