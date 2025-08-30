@@ -82,28 +82,31 @@ export class MultiChainKeyService {
    * Get account for any supported chain
    */
   async getAccountForChain(chainId: CctpNetworkId): Promise<{ address: string; signer?: any }> {
-    switch (chainId) {
-      case CctpNetworkId.SOLANA:
-        const solanaAccount = await this.getSolanaAccount();
-        return {
-          address: solanaAccount.address,
-          signer: solanaAccount.keypair
-        };
-
-      case CctpNetworkId.ETHEREUM:
-      case CctpNetworkId.ARBITRUM:
-      case CctpNetworkId.BASE:
-      case CctpNetworkId.POLYGON:
-      case CctpNetworkId.AVALANCHE:
-        const ethAccount = await this.getEthereumAccount();
-        return {
-          address: ethAccount.address,
-          signer: ethAccount.wallet
-        };
-
-      default:
-        throw new Error(`Unsupported chain: ${chainId}`);
+    console.log('Getting account for chain:', chainId, 'type:', typeof chainId);
+    
+    // Handle Solana (string enum)
+    if (chainId === CctpNetworkId.SOLANA || chainId === 'solana') {
+      const solanaAccount = await this.getSolanaAccount();
+      return {
+        address: solanaAccount.address,
+        signer: solanaAccount.keypair
+      };
     }
+
+    // Handle EVM chains (numeric enums)
+    if (chainId === CctpNetworkId.ETHEREUM || chainId === 1 ||
+        chainId === CctpNetworkId.ARBITRUM || chainId === 42161 ||
+        chainId === CctpNetworkId.BASE || chainId === 8453 ||
+        chainId === CctpNetworkId.POLYGON || chainId === 137 ||
+        chainId === CctpNetworkId.AVALANCHE || chainId === 43114) {
+      const ethAccount = await this.getEthereumAccount();
+      return {
+        address: ethAccount.address,
+        signer: ethAccount.wallet
+      };
+    }
+
+    throw new Error(`Unsupported chain: ${chainId} (type: ${typeof chainId})`);
   }
 
   /**
