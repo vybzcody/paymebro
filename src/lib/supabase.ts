@@ -58,4 +58,15 @@ export interface PaymentLink {
   payment_count: number
   total_collected: number
   created_at: string
+  
+  // Multi-chain extensions
+  preferredReceiveChain?: string
+  acceptedChains?: string[]
+  merchantWallets?: Record<string, string>
+  autoConvert?: boolean
+  
+  // Legacy compatibility
+  url?: string
+  clicks?: number
+  conversions?: number
 }
