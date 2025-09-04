@@ -1,0 +1,14 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy MVP files
+COPY server/package-mvp.json ./package.json
+COPY server/mvp-server.js ./
+
+# Install minimal dependencies
+RUN npm install
+
+EXPOSE 3001
+
+CMD ["npm", "start"]

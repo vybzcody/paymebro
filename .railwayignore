@@ -1,0 +1,19 @@
+# Ignore frontend files and folders
+/src
+/public
+/dist
+/node_modules
+index.html
+vite.config.ts
+tailwind.config.ts
+tsconfig.json
+tsconfig.app.json
+tsconfig.node.json
+postcss.config.js
+components.json
+eslint.config.js
+package.json
+package-lock.json
+
+# Keep server folder
+!/server
