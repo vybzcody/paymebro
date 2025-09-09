@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { paymentsApi, type CreatePaymentRequest } from "@/lib/api/payments";
-import { Loader2, QrCode, Copy, Check } from "lucide-react";
+import { Loader2, QrCode, Copy, Check, ExternalLink, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface CreatePaymentModalProps {
@@ -35,6 +35,12 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
+  const isValidEmail = (email: string) => {
+    if (!email.trim()) return true; // Empty is valid (optional)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -48,6 +54,15 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
       toast({
         title: "Validation Error",
         description: "Amount and label are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.customerEmail && !isValidEmail(formData.customerEmail)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address or leave empty",
         variant: "destructive",
       });
       return;
@@ -96,11 +111,16 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
       setIsLoading(false);
     }
   };
+
   const copyPaymentUrl = async () => {
     if (paymentResult?.paymentUrl) {
       await navigator.clipboard.writeText(paymentResult.paymentUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "Copied!",
+        description: "Payment link copied to clipboard",
+      });
     }
   };
 
@@ -111,31 +131,50 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
     onClose();
   };
 
+  const handleBackToForm = () => {
+    setPaymentResult(null);
+    setCopied(false);
+  };
+
+  // Success State
   if (paymentResult) {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5 text-green-600" />
-              Payment Created Successfully
+            <DialogTitle className="flex items-center gap-2 text-green-600">
+              <Check className="h-5 w-5" />
+              Payment Created Successfully!
             </DialogTitle>
             <DialogDescription>
-              Share this QR code or payment link with your customer
+              Your {formData.currency} payment request is ready to share
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
-            {/* QR Code */}
-            <div className="flex justify-center p-4 bg-gray-50 rounded-lg">
-              <img 
-                src={paymentResult.qrCode} 
-                alt="Payment QR Code" 
-                className="w-48 h-48"
-              />
+            {/* Amount Display */}
+            <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="text-2xl font-bold text-green-700">
+                {formData.amount} {formData.currency}
+              </div>
+              <div className="text-sm text-green-600">{formData.label}</div>
             </div>
 
-            {/* Payment URL */}
+            {/* QR Code */}
+            {paymentResult.qrCode && (
+              <div className="text-center">
+                <img 
+                  src={paymentResult.qrCode} 
+                  alt="Payment QR Code" 
+                  className="w-48 h-48 mx-auto border rounded-lg"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Scan with Solana wallet
+                </p>
+              </div>
+            )}
+
+            {/* Payment Link */}
             <div className="space-y-2">
               <Label>Payment Link</Label>
               <div className="flex items-center gap-2">
@@ -169,9 +208,13 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
             </div>
           </div>
 
-          <DialogFooter>
-            <Button onClick={handleClose} className="w-full">
-              Create Another Payment
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleBackToForm} className="flex-1">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Create Another
+            </Button>
+            <Button onClick={handleClose} className="flex-1">
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -179,11 +222,12 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
     );
   }
 
+  // Form State
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Payment</DialogTitle>
+          <DialogTitle>Create Payment Request</DialogTitle>
           <DialogDescription>
             Generate a payment QR code for your customer
           </DialogDescription>
@@ -202,6 +246,7 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -209,6 +254,7 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
               <Select 
                 value={formData.currency} 
                 onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -229,6 +275,7 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
               value={formData.label}
               onChange={(e) => setFormData({ ...formData, label: e.target.value })}
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -240,6 +287,7 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               rows={3}
+              disabled={isLoading}
             />
           </div>
 
@@ -251,11 +299,12 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
               placeholder="customer@example.com"
               value={formData.customerEmail}
               onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
+              disabled={isLoading}
             />
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
