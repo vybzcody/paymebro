@@ -6,6 +6,8 @@ import { Dashboard as DashboardComponent } from "@/components/dashboard/dashboar
 import { CreatePaymentModal } from "@/components/payments/create-payment-modal";
 import { TemplatesModal } from "@/components/templates/templates-modal";
 import { EmailManagement } from "@/components/emails/email-management";
+import { SubscriptionManagement } from "@/components/subscriptions/subscription-management";
+import { WebhookConfig } from "@/components/webhooks/webhook-config";
 import { useState, useEffect, useRef } from "react";
 import { usersApi } from "@/lib/api/users";
 import { MultiChainKeyService } from "@/lib/wallet/MultiChainKeyService";
@@ -144,9 +146,11 @@ export default function DashboardPage() {
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="emails">Email Management</TabsTrigger>
+            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+            <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+            <TabsTrigger value="emails">Emails</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           
@@ -157,6 +161,14 @@ export default function DashboardPage() {
               onViewTemplates={handleViewTemplates}
               onViewWallets={handleViewWallets}
             />
+          </TabsContent>
+          
+          <TabsContent value="subscriptions" className="mt-6">
+            <SubscriptionManagement userId={user.web3auth_user_id} />
+          </TabsContent>
+          
+          <TabsContent value="webhooks" className="mt-6">
+            <WebhookConfig userId={user.web3auth_user_id} />
           </TabsContent>
           
           <TabsContent value="emails" className="mt-6">
