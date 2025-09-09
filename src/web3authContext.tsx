@@ -28,7 +28,8 @@ const web3AuthContextConfig: Web3AuthContextConfig = {
   web3AuthOptions: {
     clientId,
     web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
-    privateKeyProvider,
+    // chains: [chainConfig], // Pass array of custom chains
+    // privateKeyProvider,
   }
 };
 // IMP END - Instantiate SDK

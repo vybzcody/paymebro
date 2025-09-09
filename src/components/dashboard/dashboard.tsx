@@ -1,6 +1,6 @@
 import { MetricsCards } from "./metrics-cards";
-import { PaymentTrendsChart } from "./payment-trends-chart";
-import { RecentPayments } from "./recent-payments";
+import { PaymentTrendsChart } from "../../pages/payment-trends-chart";
+import { RecentPayments } from "../../pages/recent-payments";
 import { QuickActions } from "./quick-actions";
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutTemplate, Wallet } from "lucide-react";
@@ -30,41 +30,32 @@ export function Dashboard({ user, onCreatePayment, onViewTemplates, onViewWallet
             Here's what's happening with your payments today.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button
-            variant="outline"
-            className="py-2 px-4 text-sm font-medium"
-            onClick={onCreatePayment}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Payment
+
+        {/* Quick Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0">
+          <Button onClick={onCreatePayment} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Create Payment
           </Button>
-          <Button
-            variant="outline"
-            className="py-2 px-4 text-sm font-medium"
-            onClick={onViewTemplates}
-          >
-            <LayoutTemplate className="mr-2 h-4 w-4" />
+          <Button onClick={onViewTemplates} variant="outline" className="flex items-center gap-2">
+            <LayoutTemplate className="h-4 w-4" />
             Templates
           </Button>
           {onViewWallets && (
-            <Button
-              className="py-2 px-4 text-sm font-medium"
-              onClick={onViewWallets}
-            >
-              <Wallet className="mr-2 h-4 w-4" />
+            <Button onClick={onViewWallets} variant="outline" className="flex items-center gap-2">
+              <Wallet className="h-4 w-4" />
               Wallets
             </Button>
           )}
         </div>
       </div>
 
-      {/* Metrics Overview */}
+      {/* Metrics Cards */}
       <MetricsCards userId={user.web3auth_user_id} />
 
       {/* Charts and Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <PaymentTrendsChart />
+        <PaymentTrendsChart userId={user.web3auth_user_id} />
         <RecentPayments userId={user.web3auth_user_id} />
       </div>
 
@@ -73,7 +64,59 @@ export function Dashboard({ user, onCreatePayment, onViewTemplates, onViewWallet
         onCreatePayment={onCreatePayment}
         onCreateTemplate={onViewTemplates}
         onViewAnalytics={() => { }}
+
+      // onViewTemplates={onViewTemplates}
+      // onViewWallets={onViewWallets}
       />
     </div>
   );
 }
+//           </p>
+//         </div>
+//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+//           <Button
+//             variant="outline"
+//             className="py-2 px-4 text-sm font-medium"
+//             onClick={onCreatePayment}
+//           >
+//             <Plus className="mr-2 h-4 w-4" />
+//             New Payment
+//           </Button>
+//           <Button
+//             variant="outline"
+//             className="py-2 px-4 text-sm font-medium"
+//             onClick={onViewTemplates}
+//           >
+//             <LayoutTemplate className="mr-2 h-4 w-4" />
+//             Templates
+//           </Button>
+//           {onViewWallets && (
+//             <Button
+//               className="py-2 px-4 text-sm font-medium"
+//               onClick={onViewWallets}
+//             >
+//               <Wallet className="mr-2 h-4 w-4" />
+//               Wallets
+//             </Button>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Metrics Overview */}
+//       <MetricsCards userId={user.web3auth_user_id} />
+
+//       {/* Charts and Recent Activity */}
+//       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+//         <PaymentTrendsChart />
+//         <RecentPayments userId={user.web3auth_user_id} />
+//       </div>
+
+//       {/* Quick Actions */}
+//       <QuickActions
+//         onCreatePayment={onCreatePayment}
+//         onCreateTemplate={onViewTemplates}
+//         onViewAnalytics={() => { }}
+//       />
+//     </div>
+//   );
+// }
