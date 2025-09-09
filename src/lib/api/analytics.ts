@@ -22,33 +22,13 @@ export interface PaymentHistory {
 export const analyticsApi = {
   async getMetrics(userId: string): Promise<AnalyticsMetrics> {
     try {
-      // Use merchant analytics endpoint for user-specific data
-      const response = await fetch(`${appConfig.apiUrl}/api/analytics/overview`, {
+      // Use the working analytics endpoint
+      const response = await fetch(`${appConfig.apiUrl}/api/analytics`, {
         headers: getApiHeaders(userId),
       });
-
+      
       if (!response.ok) {
-        // Fallback to general metrics if overview fails
-        const fallbackResponse = await fetch(`${appConfig.apiUrl}/api/analytics`, {
-          headers: getApiHeaders(userId),
-        });
-        
-        if (!fallbackResponse.ok) {
-          throw new Error(`HTTP ${fallbackResponse.status}: Failed to fetch metrics`);
-        }
-
-        const fallbackResult = await fallbackResponse.json();
-        if (!fallbackResult.success) {
-          throw new Error(fallbackResult.error || 'Failed to fetch metrics');
-        }
-
-        const metrics = fallbackResult.metrics || {};
-        return {
-          totalPayments: metrics.totalPayments || 0,
-          totalRevenue: metrics.totalRevenue || 0,
-          conversionRate: metrics.conversionRate || '0',
-          totalUsers: metrics.totalUsers || 0
-        };
+        throw new Error(`HTTP ${response.status}: Failed to fetch metrics`);
       }
 
       const result = await response.json();
@@ -56,12 +36,12 @@ export const analyticsApi = {
         throw new Error(result.error || 'Failed to fetch metrics');
       }
 
-      const analytics = result.analytics || {};
+      const metrics = result.metrics || {};
       return {
-        totalPayments: analytics.totalPayments || 0,
-        totalRevenue: analytics.totalRevenue || 0,
-        conversionRate: analytics.conversionRate || '0',
-        totalUsers: 1 // Current user
+        totalPayments: metrics.totalPayments || 0,
+        totalRevenue: metrics.totalRevenue || 0,
+        conversionRate: metrics.conversionRate || '0',
+        totalUsers: metrics.totalUsers || 0
       };
     } catch (error) {
       console.error('Analytics API error:', error);

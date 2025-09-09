@@ -5,9 +5,11 @@ import { useLocation } from "wouter";
 import { Dashboard as DashboardComponent } from "@/components/dashboard/dashboard";
 import { CreatePaymentModal } from "@/components/payments/create-payment-modal";
 import { TemplatesModal } from "@/components/templates/templates-modal";
+import { EmailManagement } from "@/components/emails/email-management";
 import { useState, useEffect, useRef } from "react";
 import { usersApi } from "@/lib/api/users";
 import { MultiChainKeyService } from "@/lib/wallet/MultiChainKeyService";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function DashboardPage() {
   const { userInfo } = useWeb3AuthUser();
@@ -141,12 +143,32 @@ export default function DashboardPage() {
   return (
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <DashboardComponent
-          user={user}
-          onCreatePayment={handleCreatePayment}
-          onViewTemplates={handleViewTemplates}
-          onViewWallets={handleViewWallets}
-        />
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="emails">Email Management</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="dashboard" className="mt-6">
+            <DashboardComponent
+              user={user}
+              onCreatePayment={handleCreatePayment}
+              onViewTemplates={handleViewTemplates}
+              onViewWallets={handleViewWallets}
+            />
+          </TabsContent>
+          
+          <TabsContent value="emails" className="mt-6">
+            <EmailManagement userId={user.web3auth_user_id} />
+          </TabsContent>
+          
+          <TabsContent value="settings" className="mt-6">
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Settings panel coming soon...</p>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <CreatePaymentModal
