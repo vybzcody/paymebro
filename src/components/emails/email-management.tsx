@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { appConfig, getApiHeaders } from '@/lib/config';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +26,8 @@ export function EmailManagement({ userId }: EmailManagementProps) {
   const [emails, setEmails] = useState<EmailNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testEmail, setTestEmail] = useState('');
   const { toast } = useToast();
 
   const fetchEmails = async () => {
@@ -71,12 +75,33 @@ export function EmailManagement({ userId }: EmailManagementProps) {
   };
 
   const sendTestEmail = async () => {
+    if (!testEmail) {
+      toast({
+        title: "Error",
+        description: "Please enter an email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(testEmail)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingTest(true);
     try {
       const response = await fetch(`${appConfig.apiUrl}/api/emails/test`, {
         method: 'POST',
         headers: getApiHeaders(userId),
         body: JSON.stringify({
-          email: 'test@example.com',
+          email: testEmail,
           userId: userId,
         }),
       });
@@ -84,9 +109,12 @@ export function EmailManagement({ userId }: EmailManagementProps) {
       if (response.ok) {
         toast({
           title: "Test Email Sent",
-          description: "Check your email queue",
+          description: `Test email queued for ${testEmail}`,
         });
+        setTestEmail(''); // Clear input
         fetchEmails();
+      } else {
+        throw new Error('Failed to send test email');
       }
     } catch (error) {
       toast({
@@ -94,6 +122,8 @@ export function EmailManagement({ userId }: EmailManagementProps) {
         description: "Failed to send test email",
         variant: "destructive",
       });
+    } finally {
+      setSendingTest(false);
     }
   };
 
@@ -110,17 +140,36 @@ export function EmailManagement({ userId }: EmailManagementProps) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Email Notifications
-          <div className="space-x-2">
-            <Button onClick={sendTestEmail} variant="outline" size="sm">
-              Send Test
-            </Button>
-            <Button onClick={processEmails} disabled={processing} size="sm">
-              {processing ? 'Processing...' : 'Process Queue'}
-            </Button>
-          </div>
+          <Button onClick={processEmails} disabled={processing} size="sm">
+            {processing ? 'Processing...' : 'Process Queue'}
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Test Email Section */}
+        <div className="mb-6 p-4 border rounded-lg">
+          <Label htmlFor="test-email" className="text-sm font-medium">
+            Send Test Email
+          </Label>
+          <div className="flex gap-2 mt-2">
+            <Input
+              id="test-email"
+              type="email"
+              placeholder="Enter email address to test"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              className="flex-1"
+            />
+            <Button 
+              onClick={sendTestEmail} 
+              disabled={sendingTest || !testEmail}
+              size="sm"
+            >
+              {sendingTest ? 'Sending...' : 'Send Test'}
+            </Button>
+          </div>
+        </div>
+
         {emails.length === 0 ? (
           <p className="text-muted-foreground">No pending email notifications</p>
         ) : (
