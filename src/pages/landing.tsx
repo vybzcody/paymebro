@@ -44,7 +44,7 @@ export default function Landing() {
                             onClick={connect}
                             disabled={disconnectLoading}
                         >
-                            {disconnectLoading ? 'Connecting...' : 'Connect Wallet'}
+                            {disconnectLoading ? 'Starting...' : 'Get Started'}
                         </Button>
                         <p className="text-sm text-gray-500 mt-4">
                             Connect your wallet to get started with AfriPay
@@ -109,9 +109,9 @@ export default function Landing() {
                             <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <span className="text-green-600 font-bold">1</span>
                             </div>
-                            <h3 className="text-xl font-semibold mb-2">Connect Wallet</h3>
+                            <h3 className="text-xl font-semibold mb-2">Get Started</h3>
                             <p className="text-gray-600">
-                                Connect your multi-chain wallet with one click
+                                Sign up with your social account and start accepting payments instantly
                             </p>
                         </div>
                         <div>
