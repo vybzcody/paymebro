@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Plus, RefreshCw, DollarSign } from 'lucide-react';
 import { subscriptionsApi, SubscriptionPlan, CreatePlanRequest } from '@/lib/api/subscriptions';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,6 +17,7 @@ interface SubscriptionManagementProps {
 export function SubscriptionManagement({ userId }: SubscriptionManagementProps) {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [creating, setCreating] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const { toast } = useToast();
@@ -28,22 +31,38 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
     description: '',
   });
 
-  const fetchPlans = async () => {
+  const fetchPlans = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
     try {
       const fetchedPlans = await subscriptionsApi.getPlans(userId);
       setPlans(fetchedPlans);
     } catch (error) {
       console.error('Failed to fetch plans:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch subscription plans",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   const handleCreatePlan = async () => {
-    if (!newPlan.name || !newPlan.amount) {
+    if (!newPlan.name.trim() || !newPlan.amount.trim()) {
       toast({
-        title: "Error",
-        description: "Name and amount are required",
+        title: "Validation Error",
+        description: "Plan name and amount are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (parseFloat(newPlan.amount) <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Amount must be greater than 0",
         variant: "destructive",
       });
       return;
@@ -54,22 +73,14 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
       await subscriptionsApi.createPlan(newPlan, userId);
       toast({
         title: "Plan Created",
-        description: "Subscription plan created successfully",
+        description: `${newPlan.name} plan created successfully`,
       });
-      setNewPlan({
-        name: '',
-        amount: '',
-        currency: 'USDC',
-        interval_type: 'monthly',
-        interval_count: 1,
-        description: '',
-      });
-      setShowCreateForm(false);
-      fetchPlans();
+      resetForm();
+      fetchPlans(true);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create plan",
+        description: "Failed to create subscription plan",
         variant: "destructive",
       });
     } finally {
@@ -77,31 +88,68 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
     }
   };
 
+  const resetForm = () => {
+    setNewPlan({
+      name: '',
+      amount: '',
+      currency: 'USDC',
+      interval_type: 'monthly',
+      interval_count: 1,
+      description: '',
+    });
+    setShowCreateForm(false);
+  };
+
   useEffect(() => {
     fetchPlans();
   }, [userId]);
 
-  if (loading) {
-    return <div>Loading subscription plans...</div>;
-  }
+  const LoadingSkeleton = () => (
+    <div className="grid gap-4">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-5 w-1/3" />
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-4 w-1/4" />
+          </div>
+          <Skeleton className="h-6 w-16" />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Subscription Plans
-            <Button onClick={() => setShowCreateForm(!showCreateForm)} size="sm">
-              {showCreateForm ? 'Cancel' : 'Create Plan'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Subscription Plans
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => fetchPlans(true)} 
+                disabled={refreshing}
+                variant="outline" 
+                size="sm"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button onClick={() => setShowCreateForm(!showCreateForm)} size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                {showCreateForm ? 'Cancel' : 'Create Plan'}
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {showCreateForm && (
-            <div className="mb-6 p-4 border rounded-lg space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="mb-6 p-4 border rounded-lg space-y-4 bg-muted/50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="name">Plan Name</Label>
+                  <Label htmlFor="name">Plan Name *</Label>
                   <Input
                     id="name"
                     value={newPlan.name}
@@ -110,11 +158,12 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
                   />
                 </div>
                 <div>
-                  <Label htmlFor="amount">Amount</Label>
+                  <Label htmlFor="amount">Amount *</Label>
                   <Input
                     id="amount"
                     type="number"
                     step="0.01"
+                    min="0"
                     value={newPlan.amount}
                     onChange={(e) => setNewPlan({ ...newPlan, amount: e.target.value })}
                     placeholder="9.99"
@@ -122,7 +171,7 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="currency">Currency</Label>
                   <Select value={newPlan.currency} onValueChange={(value) => setNewPlan({ ...newPlan, currency: value })}>
@@ -159,23 +208,39 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
                 />
               </div>
 
-              <Button onClick={handleCreatePlan} disabled={creating} className="w-full">
-                {creating ? 'Creating...' : 'Create Plan'}
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleCreatePlan} disabled={creating} className="flex-1">
+                  {creating ? 'Creating...' : 'Create Plan'}
+                </Button>
+                <Button onClick={resetForm} variant="outline">
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
 
-          {plans.length === 0 ? (
-            <p className="text-muted-foreground">No subscription plans created yet</p>
+          {loading ? (
+            <LoadingSkeleton />
+          ) : plans.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">No subscription plans created yet</p>
+              <Button onClick={() => setShowCreateForm(true)} variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Plan
+              </Button>
+            </div>
           ) : (
             <div className="grid gap-4">
               {plans.map((plan) => (
-                <div key={plan.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={plan.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                   <div>
                     <h3 className="font-medium">{plan.name}</h3>
                     <p className="text-sm text-muted-foreground">{plan.description}</p>
-                    <p className="text-sm">
+                    <p className="text-sm font-medium mt-1">
                       {plan.amount} {plan.currency} / {plan.interval_type}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Created: {new Date(plan.created_at).toLocaleDateString()}
                     </p>
                   </div>
                   <Badge variant="secondary">Active</Badge>

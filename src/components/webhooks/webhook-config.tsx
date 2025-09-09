@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Plus, RefreshCw, Webhook, Trash2, TestTube } from 'lucide-react';
 import { webhooksApi, Webhook, CreateWebhookRequest } from '@/lib/api/webhooks';
 import { useToast } from '@/hooks/use-toast';
 
@@ -23,8 +25,10 @@ const AVAILABLE_EVENTS = [
 export function WebhookConfig({ userId }: WebhookConfigProps) {
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [creating, setCreating] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [testingWebhook, setTestingWebhook] = useState<string | null>(null);
   const { toast } = useToast();
 
   const [newWebhook, setNewWebhook] = useState<CreateWebhookRequest>({
@@ -32,22 +36,41 @@ export function WebhookConfig({ userId }: WebhookConfigProps) {
     events: [],
   });
 
-  const fetchWebhooks = async () => {
+  const fetchWebhooks = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
     try {
       const fetchedWebhooks = await webhooksApi.getWebhooks(userId);
       setWebhooks(fetchedWebhooks);
     } catch (error) {
       console.error('Failed to fetch webhooks:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch webhooks",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   const handleCreateWebhook = async () => {
-    if (!newWebhook.url || newWebhook.events.length === 0) {
+    if (!newWebhook.url.trim() || newWebhook.events.length === 0) {
       toast({
-        title: "Error",
+        title: "Validation Error",
         description: "URL and at least one event are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic URL validation
+    try {
+      new URL(newWebhook.url);
+    } catch {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid URL",
         variant: "destructive",
       });
       return;
@@ -60,9 +83,8 @@ export function WebhookConfig({ userId }: WebhookConfigProps) {
         title: "Webhook Created",
         description: "Webhook endpoint created successfully",
       });
-      setNewWebhook({ url: '', events: [] });
-      setShowCreateForm(false);
-      fetchWebhooks();
+      resetForm();
+      fetchWebhooks(true);
     } catch (error) {
       toast({
         title: "Error",
@@ -81,7 +103,7 @@ export function WebhookConfig({ userId }: WebhookConfigProps) {
         title: "Webhook Deleted",
         description: "Webhook endpoint deleted successfully",
       });
-      fetchWebhooks();
+      fetchWebhooks(true);
     } catch (error) {
       toast({
         title: "Error",
@@ -92,11 +114,12 @@ export function WebhookConfig({ userId }: WebhookConfigProps) {
   };
 
   const handleTestWebhook = async (webhookId: string) => {
+    setTestingWebhook(webhookId);
     try {
       await webhooksApi.testWebhook(webhookId, userId);
       toast({
         title: "Test Sent",
-        description: "Test webhook sent successfully",
+        description: "Test webhook payload sent successfully",
       });
     } catch (error) {
       toast({
@@ -104,6 +127,8 @@ export function WebhookConfig({ userId }: WebhookConfigProps) {
         description: "Failed to send test webhook",
         variant: "destructive",
       });
+    } finally {
+      setTestingWebhook(null);
     }
   };
 
@@ -115,29 +140,65 @@ export function WebhookConfig({ userId }: WebhookConfigProps) {
     }
   };
 
+  const resetForm = () => {
+    setNewWebhook({ url: '', events: [] });
+    setShowCreateForm(false);
+  };
+
   useEffect(() => {
     fetchWebhooks();
   }, [userId]);
 
-  if (loading) {
-    return <div>Loading webhooks...</div>;
-  }
+  const LoadingSkeleton = () => (
+    <div className="space-y-4">
+      {[1, 2].map((i) => (
+        <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <div className="flex gap-2">
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-5 w-24" />
+            </div>
+            <Skeleton className="h-3 w-1/3" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Webhook Endpoints
-          <Button onClick={() => setShowCreateForm(!showCreateForm)} size="sm">
-            {showCreateForm ? 'Cancel' : 'Add Webhook'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Webhook className="h-5 w-5" />
+            Webhook Endpoints
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => fetchWebhooks(true)} 
+              disabled={refreshing}
+              variant="outline" 
+              size="sm"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button onClick={() => setShowCreateForm(!showCreateForm)} size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              {showCreateForm ? 'Cancel' : 'Add Webhook'}
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
         {showCreateForm && (
-          <div className="mb-6 p-4 border rounded-lg space-y-4">
+          <div className="mb-6 p-4 border rounded-lg space-y-4 bg-muted/50">
             <div>
-              <Label htmlFor="url">Webhook URL</Label>
+              <Label htmlFor="url">Webhook URL *</Label>
               <Input
                 id="url"
                 type="url"
@@ -148,8 +209,8 @@ export function WebhookConfig({ userId }: WebhookConfigProps) {
             </div>
 
             <div>
-              <Label>Events to Subscribe</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              <Label>Events to Subscribe *</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
                 {AVAILABLE_EVENTS.map((event) => (
                   <div key={event} className="flex items-center space-x-2">
                     <Checkbox
@@ -163,18 +224,31 @@ export function WebhookConfig({ userId }: WebhookConfigProps) {
               </div>
             </div>
 
-            <Button onClick={handleCreateWebhook} disabled={creating} className="w-full">
-              {creating ? 'Creating...' : 'Create Webhook'}
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleCreateWebhook} disabled={creating} className="flex-1">
+                {creating ? 'Creating...' : 'Create Webhook'}
+              </Button>
+              <Button onClick={resetForm} variant="outline">
+                Cancel
+              </Button>
+            </div>
           </div>
         )}
 
-        {webhooks.length === 0 ? (
-          <p className="text-muted-foreground">No webhook endpoints configured</p>
+        {loading ? (
+          <LoadingSkeleton />
+        ) : webhooks.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">No webhook endpoints configured</p>
+            <Button onClick={() => setShowCreateForm(true)} variant="outline">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Your First Webhook
+            </Button>
+          </div>
         ) : (
           <div className="space-y-4">
             {webhooks.map((webhook) => (
-              <div key={webhook.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div key={webhook.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex-1">
                   <p className="font-medium break-all">{webhook.url}</p>
                   <div className="flex flex-wrap gap-1 mt-2">
@@ -191,17 +265,19 @@ export function WebhookConfig({ userId }: WebhookConfigProps) {
                 <div className="flex space-x-2 ml-4">
                   <Button
                     onClick={() => handleTestWebhook(webhook.id)}
+                    disabled={testingWebhook === webhook.id}
                     variant="outline"
                     size="sm"
                   >
-                    Test
+                    <TestTube className="h-4 w-4 mr-1" />
+                    {testingWebhook === webhook.id ? 'Testing...' : 'Test'}
                   </Button>
                   <Button
                     onClick={() => handleDeleteWebhook(webhook.id)}
                     variant="destructive"
                     size="sm"
                   >
-                    Delete
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
