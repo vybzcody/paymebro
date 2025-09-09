@@ -28,22 +28,46 @@ export interface PaymentStatus {
 
 export const paymentsApi = {
   async createPayment(paymentData: CreatePaymentRequest): Promise<PaymentResponse> {
+    console.log('🚀 Creating payment with data:', {
+      ...paymentData,
+      customerEmail: paymentData.customerEmail || 'none'
+    });
+
+    const requestBody = {
+      ...paymentData,
+      chain: paymentData.chain || 'solana',
+      splToken: paymentData.splToken || 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr', // USDC devnet
+      // Remove empty customerEmail to avoid validation error
+      ...(paymentData.customerEmail && paymentData.customerEmail.trim() && {
+        customerEmail: paymentData.customerEmail.trim()
+      })
+    };
+
+    console.log('📤 Request body:', requestBody);
+
     const response = await fetch(`${appConfig.apiUrl}${appConfig.endpoints.payments}/create`, {
       method: 'POST',
       headers: getApiHeaders(paymentData.web3AuthUserId),
-      body: JSON.stringify({
-        ...paymentData,
-        chain: paymentData.chain || 'solana',
-        splToken: paymentData.splToken || 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr', // USDC devnet
-      }),
+      body: JSON.stringify(requestBody),
     });
 
+    console.log('📥 Response status:', response.status);
+
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Payment creation failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
       throw new Error(`HTTP ${response.status}: Failed to create payment`);
     }
 
     const result = await response.json();
+    console.log('✅ Payment created successfully:', result);
+
     if (!result.success) {
+      console.error('❌ Backend returned error:', result.error);
       throw new Error(result.error || 'Failed to create payment');
     }
 
@@ -51,13 +75,18 @@ export const paymentsApi = {
   },
 
   async getPaymentStatus(reference: string): Promise<PaymentStatus> {
+    console.log('🔍 Getting payment status for:', reference);
+
     const response = await fetch(`${appConfig.apiUrl}${appConfig.endpoints.payments}/${reference}/status`);
 
     if (!response.ok) {
+      console.error('❌ Failed to get payment status:', response.status);
       throw new Error(`HTTP ${response.status}: Failed to get payment status`);
     }
 
     const result = await response.json();
+    console.log('📊 Payment status:', result);
+
     if (!result.success) {
       throw new Error(result.error || 'Failed to get payment status');
     }
@@ -66,6 +95,8 @@ export const paymentsApi = {
   },
 
   async confirmPayment(signature: string, reference: string): Promise<boolean> {
+    console.log('✅ Confirming payment:', { signature, reference });
+
     const response = await fetch(`${appConfig.apiUrl}${appConfig.endpoints.payments}/confirm`, {
       method: 'POST',
       headers: getApiHeaders(),
@@ -73,10 +104,12 @@ export const paymentsApi = {
     });
 
     if (!response.ok) {
+      console.error('❌ Failed to confirm payment:', response.status);
       throw new Error(`HTTP ${response.status}: Failed to confirm payment`);
     }
 
     const result = await response.json();
+    console.log('✅ Payment confirmation result:', result);
     return result.success;
   },
 };

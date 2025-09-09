@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { paymentsApi, type CreatePaymentRequest } from "@/lib/api/payments";
 import { Loader2, QrCode, Copy, Check } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface CreatePaymentModalProps {
   isOpen: boolean;
@@ -26,34 +28,74 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
     label: "",
     message: "",
     customerEmail: "",
+    currency: "USDC"
   });
   const [isLoading, setIsLoading] = useState(false);
   const [paymentResult, setPaymentResult] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('🎯 Form submission started:', {
+      ...formData,
+      userId,
+      customerEmail: formData.customerEmail || 'none'
+    });
+
+    if (!formData.amount || !formData.label) {
+      toast({
+        title: "Validation Error",
+        description: "Amount and label are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      const splToken = formData.currency === 'USDC' 
+        ? 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr' // USDC devnet
+        : undefined; // SOL (native)
+
+      console.log('💰 Payment configuration:', {
+        currency: formData.currency,
+        splToken,
+        chain: 'solana'
+      });
+
       const paymentData: CreatePaymentRequest = {
         amount: parseFloat(formData.amount),
         label: formData.label,
-        message: formData.message,
-        customerEmail: formData.customerEmail,
+        message: formData.message || formData.label,
+        customerEmail: formData.customerEmail.trim() || undefined,
         web3AuthUserId: userId,
+        chain: 'solana',
+        splToken
       };
 
       const result = await paymentsApi.createPayment(paymentData);
+      console.log('🎉 Payment created successfully:', result);
+      
       setPaymentResult(result);
+      
+      toast({
+        title: "Payment Created!",
+        description: `${formData.currency} payment request created successfully`,
+      });
     } catch (error) {
-      console.error('Failed to create payment:', error);
-      alert('Failed to create payment. Please try again.');
+      console.error('💥 Payment creation failed:', error);
+      toast({
+        title: "Payment Creation Failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
-
   const copyPaymentUrl = async () => {
     if (paymentResult?.paymentUrl) {
       await navigator.clipboard.writeText(paymentResult.paymentUrl);
@@ -63,7 +105,7 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
   };
 
   const handleClose = () => {
-    setFormData({ amount: "", label: "", message: "", customerEmail: "" });
+    setFormData({ amount: "", label: "", message: "", customerEmail: "", currency: "USDC" });
     setPaymentResult(null);
     setCopied(false);
     onClose();
@@ -148,22 +190,39 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount (USDC)</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount *</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="currency">Currency *</Label>
+              <Select 
+                value={formData.currency} 
+                onValueChange={(value) => setFormData({ ...formData, currency: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USDC">USDC</SelectItem>
+                  <SelectItem value="SOL">SOL</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="label">Payment Label</Label>
+            <Label htmlFor="label">Payment Label *</Label>
             <Input
               id="label"
               placeholder="e.g., Coffee Purchase"
@@ -201,7 +260,7 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Payment
+              {isLoading ? 'Creating...' : `Create ${formData.currency} Payment`}
             </Button>
           </DialogFooter>
         </form>
