@@ -39,7 +39,7 @@ export function MetricsCards({ userId }: MetricsCardsProps) {
     {
       title: "Total Payments",
       value: metrics?.totalPayments.toString() || "0",
-      change: "+12%",
+      change: metrics?.totalPayments > 0 ? "+12%" : "Start creating payments",
       icon: CreditCard,
       iconClass: "text-green-600",
       bgClass: "bg-green-100",
@@ -47,7 +47,7 @@ export function MetricsCards({ userId }: MetricsCardsProps) {
     {
       title: "Total Revenue",
       value: `$${metrics?.totalRevenue.toFixed(2) || "0.00"}`,
-      change: "+8%",
+      change: metrics?.totalRevenue > 0 ? "+8%" : "Revenue will appear here",
       icon: DollarSign,
       iconClass: "text-blue-600",
       bgClass: "bg-blue-100",
@@ -55,15 +55,15 @@ export function MetricsCards({ userId }: MetricsCardsProps) {
     {
       title: "Success Rate",
       value: `${metrics?.conversionRate || "0"}%`,
-      change: "+5%",
+      change: metrics?.totalPayments > 0 ? "+5%" : "Track payment success",
       icon: TrendingUp,
       iconClass: "text-purple-600",
       bgClass: "bg-purple-100",
     },
     {
-      title: "Active Users",
-      value: metrics?.totalUsers.toString() || "0",
-      change: "+3",
+      title: "Plan Usage",
+      value: `${metrics?.planUsage?.current || 0}/${metrics?.planUsage?.limit || 100}`,
+      change: `${(metrics?.planUsage?.limit || 100) - (metrics?.planUsage?.current || 0)} payments left`,
       icon: Users,
       iconClass: "text-orange-600",
       bgClass: "bg-orange-100",
