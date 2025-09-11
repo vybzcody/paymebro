@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutTemplate, BarChart3, QrCode, Settings, Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface QuickActionsProps {
   onCreatePayment: () => void;
@@ -9,6 +10,15 @@ interface QuickActionsProps {
 }
 
 export function QuickActions({ onCreatePayment, onCreateTemplate, onViewAnalytics }: QuickActionsProps) {
+  const { toast } = useToast();
+
+  const showComingSoon = (feature: string) => {
+    toast({
+      title: "Coming Soon!",
+      description: `${feature} feature will be available in the next update.`,
+    });
+  };
+
   const actions = [
     {
       title: "Create Payment",
@@ -38,7 +48,7 @@ export function QuickActions({ onCreatePayment, onCreateTemplate, onViewAnalytic
       title: "QR Code Scanner",
       description: "Scan payment QR codes",
       icon: QrCode,
-      onClick: () => console.log("QR Scanner"),
+      onClick: () => showComingSoon("QR Code Scanner"),
       className: "bg-orange-50 hover:bg-orange-100 border-orange-200",
       iconClass: "text-orange-600",
     },
@@ -46,7 +56,7 @@ export function QuickActions({ onCreatePayment, onCreateTemplate, onViewAnalytic
       title: "Settings",
       description: "Manage your account settings",
       icon: Settings,
-      onClick: () => console.log("Settings"),
+      onClick: () => showComingSoon("Settings"),
       className: "bg-gray-50 hover:bg-gray-100 border-gray-200",
       iconClass: "text-gray-600",
     },
@@ -54,7 +64,7 @@ export function QuickActions({ onCreatePayment, onCreateTemplate, onViewAnalytic
       title: "Export Data",
       description: "Download payment reports",
       icon: Download,
-      onClick: () => console.log("Export"),
+      onClick: () => showComingSoon("Export Data"),
       className: "bg-indigo-50 hover:bg-indigo-100 border-indigo-200",
       iconClass: "text-indigo-600",
     },

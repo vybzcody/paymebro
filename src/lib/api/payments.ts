@@ -4,7 +4,6 @@ export interface CreatePaymentRequest {
   amount: number;
   label: string;
   message?: string;
-  customerEmail?: string;
   web3AuthUserId: string;
   chain?: string;
   splToken?: string;
@@ -36,7 +35,10 @@ export const paymentsApi = {
     const requestBody = {
       ...paymentData,
       chain: paymentData.chain || 'solana',
-      splToken: paymentData.splToken || 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr', // USDC devnet
+      // Only include splToken if currency is USDC
+      ...(paymentData.splToken && {
+        splToken: paymentData.splToken
+      }),
       // Remove empty customerEmail to avoid validation error
       ...(paymentData.customerEmail && paymentData.customerEmail.trim() && {
         customerEmail: paymentData.customerEmail.trim()

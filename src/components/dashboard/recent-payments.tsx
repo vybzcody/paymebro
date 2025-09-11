@@ -1,8 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, CheckCircle, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, CheckCircle, XCircle, Eye, Download, Copy, Wifi, WifiOff, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { analyticsApi, type PaymentHistory } from "@/lib/api/analytics";
+import { useWebSocket } from "@/components/providers/websocket-provider";
+import { useToast } from "@/hooks/use-toast";
 
 interface RecentPaymentsProps {
   userId: string;
@@ -11,6 +14,55 @@ interface RecentPaymentsProps {
 export function RecentPayments({ userId }: RecentPaymentsProps) {
   const [payments, setPayments] = useState<PaymentHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { 
+    socket, 
+    isConnected, 
+    isConnecting, 
+    connectionError, 
+    joinPayment, 
+    leavePayment, 
+    reconnect 
+  } = useWebSocket();
+  const { toast } = useToast();
+
+  const handleView = (payment: PaymentHistory) => {
+    window.open(`http://localhost:3000/payment/${payment.reference}`, '_blank');
+  };
+
+  const handleDownloadQR = async (payment: PaymentHistory) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/payments/${payment.reference}/qr`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `payment_${payment.reference.slice(0, 8)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "QR Code Downloaded",
+        description: "Payment QR code saved to downloads"
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Could not download QR code",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCopyLink = (payment: PaymentHistory) => {
+    const link = `http://localhost:3000/payment/${payment.reference}`;
+    navigator.clipboard.writeText(link);
+    toast({
+      title: "Link Copied",
+      description: "Payment link copied to clipboard"
+    });
+  };
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -29,6 +81,56 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
       fetchPayments();
     }
   }, [userId]);
+
+  // Listen for real-time payment updates and join payment rooms
+  useEffect(() => {
+    if (!socket || !isConnected || payments.length === 0) return;
+
+    // Join all payment rooms for real-time updates
+    const joinPromises = payments.map(payment => joinPayment(payment.reference));
+    Promise.all(joinPromises).then(results => {
+      const successCount = results.filter(Boolean).length;
+      console.log(`Joined ${successCount}/${payments.length} payment rooms`);
+    });
+
+    const handlePaymentUpdate = (update: any) => {
+      console.log('Received payment update:', update);
+      setPayments(prev => 
+        prev.map(payment => 
+          payment.reference === update.reference 
+            ? { ...payment, status: update.status === 'confirmed' ? 'completed' : update.status }
+            : payment
+        )
+      );
+      
+      // Show toast notification for payment status changes
+      if (update.status === 'confirmed') {
+        toast({
+          title: "Payment Confirmed",
+          description: `Payment ${update.reference.slice(0, 8)} has been confirmed!`
+        });
+      } else if (update.status === 'failed') {
+        toast({
+          title: "Payment Failed",
+          description: `Payment ${update.reference.slice(0, 8)} has failed.`,
+          variant: "destructive"
+        });
+      }
+    };
+
+    socket.on('payment-update', handlePaymentUpdate);
+
+    return () => {
+      // Leave all payment rooms when component unmounts
+      payments.forEach(payment => {
+        leavePayment(payment.reference).catch(err => 
+          console.error('Error leaving payment room:', err)
+        );
+      });
+      
+      socket.off('payment-update', handlePaymentUpdate);
+    };
+  }, [socket, isConnected, payments, joinPayment, leavePayment, toast]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -103,7 +205,49 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Payments</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Recent Payments</CardTitle>
+          <div className="flex items-center gap-2">
+            {isConnecting && (
+              <Badge variant="outline" className="text-yellow-600">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                  Connecting...
+                </div>
+              </Badge>
+            )}
+            {!isConnecting && isConnected && (
+              <Badge variant="outline" className="text-green-600">
+                <div className="flex items-center gap-1">
+                  <Wifi className="h-3 w-3" />
+                  Connected
+                </div>
+              </Badge>
+            )}
+            {!isConnecting && !isConnected && (
+              <Badge variant="outline" className="text-red-600">
+                <div className="flex items-center gap-1">
+                  <WifiOff className="h-3 w-3" />
+                  Disconnected
+                </div>
+              </Badge>
+            )}
+          </div>
+        </div>
+        {connectionError && (
+          <div className="text-sm text-red-600 flex items-center gap-2">
+            <span>{connectionError}</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={reconnect}
+              className="h-6 text-xs"
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Retry
+            </Button>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -127,11 +271,42 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-sm">
-                    {payment.amount} {payment.currency}
-                  </p>
-                  {getStatusBadge(payment.status)}
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <p className="font-semibold text-sm">
+                      {payment.amount} {payment.currency}
+                    </p>
+                    {getStatusBadge(payment.status)}
+                  </div>
+                  <div className="flex items-center gap-1 ml-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleView(payment)}
+                      title="View Payment"
+                      className="h-8 w-8 p-0"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadQR(payment)}
+                      title="Download QR"
+                      className="h-8 w-8 p-0"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCopyLink(payment)}
+                      title="Copy Link"
+                      className="h-8 w-8 p-0"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))

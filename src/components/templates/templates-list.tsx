@@ -47,7 +47,7 @@ export function TemplatesList({ templates, isLoading, onEdit, onDelete, onUse }:
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
                   {template.name}
-                  {template.isStatic && (
+                  {template.isDefault && (
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                   )}
                 </CardTitle>
@@ -79,7 +79,7 @@ export function TemplatesList({ templates, isLoading, onEdit, onDelete, onUse }:
                   Use
                 </Button>
                 
-                {!template.isStatic && (
+                {!template.isDefault && (
                   <>
                     <Button
                       size="sm"

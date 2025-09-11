@@ -5,9 +5,11 @@ import { useLocation } from "wouter";
 import { Dashboard as DashboardComponent } from "@/components/dashboard/dashboard";
 import { CreatePaymentModal } from "@/components/payments/create-payment-modal";
 import { TemplatesModal } from "@/components/templates/templates-modal";
-import { EmailManagement } from "@/components/emails/email-management";
+import { NotificationManagement } from "@/components/notifications/notification-management";
 import { SubscriptionManagement } from "@/components/subscriptions/subscription-management";
-import { WebhookConfig } from "@/components/webhooks/webhook-config";
+import { SettingsManagement } from "@/components/settings/settings-management";
+import { AnalyticsPage } from "@/pages/analytics";
+import { WebSocketProvider } from "@/components/providers/websocket-provider";
 import { useState, useEffect, useRef } from "react";
 import { usersApi } from "@/lib/api/users";
 import { MultiChainKeyService } from "@/lib/wallet/MultiChainKeyService";
@@ -20,6 +22,7 @@ export default function DashboardPage() {
   const [location, setLocation] = useLocation();
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationAttempted, setRegistrationAttempted] = useState(false);
   const registrationRef = useRef(false);
@@ -142,58 +145,64 @@ export default function DashboardPage() {
     setLocation('/wallets');
   };
 
+  // Show analytics page if requested
+  if (showAnalytics) {
+    return (
+      <AnalyticsPage 
+        onBack={() => setShowAnalytics(false)}
+        userId={user.web3auth_user_id}
+      />
+    );
+  }
+
   return (
-    <div className="bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
-            <TabsTrigger value="dashboard" className="text-xs md:text-sm">Dashboard</TabsTrigger>
-            <TabsTrigger value="subscriptions" className="text-xs md:text-sm">Subscriptions</TabsTrigger>
-            <TabsTrigger value="webhooks" className="text-xs md:text-sm">Webhooks</TabsTrigger>
-            <TabsTrigger value="emails" className="text-xs md:text-sm">Emails</TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs md:text-sm">Settings</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="dashboard" className="mt-6">
-            <DashboardComponent
-              user={user}
-              onCreatePayment={handleCreatePayment}
-              onViewTemplates={handleViewTemplates}
-              onViewWallets={handleViewWallets}
-            />
-          </TabsContent>
-          
-          <TabsContent value="subscriptions" className="mt-6">
-            <SubscriptionManagement userId={user.web3auth_user_id} />
-          </TabsContent>
-          
-          <TabsContent value="webhooks" className="mt-6">
-            <WebhookConfig userId={user.web3auth_user_id} />
-          </TabsContent>
-          
-          <TabsContent value="emails" className="mt-6">
-            <EmailManagement userId={user.web3auth_user_id} />
-          </TabsContent>
-          
-          <TabsContent value="settings" className="mt-6">
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Settings panel coming soon...</p>
-            </div>
-          </TabsContent>
-        </Tabs>
+    <WebSocketProvider userId={userId}>
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Tabs defaultValue="dashboard" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+              <TabsTrigger value="dashboard" className="text-xs md:text-sm">Dashboard</TabsTrigger>
+              <TabsTrigger value="subscriptions" className="text-xs md:text-sm">Subscriptions</TabsTrigger>
+              <TabsTrigger value="notifications" className="text-xs md:text-sm">Notifications</TabsTrigger>
+              <TabsTrigger value="settings" className="text-xs md:text-sm">Settings</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="dashboard" className="mt-6">
+              <DashboardComponent
+                user={user}
+                onCreatePayment={handleCreatePayment}
+                onViewTemplates={handleViewTemplates}
+                onViewWallets={handleViewWallets}
+                onViewAnalytics={() => setShowAnalytics(true)}
+              />
+            </TabsContent>
+            
+            <TabsContent value="subscriptions" className="mt-6">
+              <SubscriptionManagement userId={user.web3auth_user_id} />
+            </TabsContent>
+            
+            <TabsContent value="notifications" className="mt-6">
+              <NotificationManagement userId={user.web3auth_user_id} />
+            </TabsContent>
+            
+            <TabsContent value="settings" className="mt-6">
+              <SettingsManagement userId={user.web3auth_user_id} />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <CreatePaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          userId={user.web3auth_user_id}
+        />
+
+        <TemplatesModal
+          isOpen={isTemplatesModalOpen}
+          onClose={() => setIsTemplatesModalOpen(false)}
+          userId={user.web3auth_user_id}
+        />
       </div>
-
-      <CreatePaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        userId={user.web3auth_user_id}
-      />
-
-      <TemplatesModal
-        isOpen={isTemplatesModalOpen}
-        onClose={() => setIsTemplatesModalOpen(false)}
-        userId={user.web3auth_user_id}
-      />
-    </div>
+    </WebSocketProvider>
   );
 }

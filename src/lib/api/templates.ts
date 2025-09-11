@@ -9,7 +9,7 @@ export interface Template {
   message?: string;
   web3AuthUserId: string;
   createdAt: string;
-  isStatic?: boolean;
+  isDefault?: boolean;
 }
 
 export interface CreateTemplateRequest {
@@ -29,18 +29,7 @@ export interface UpdateTemplateRequest {
   message?: string;
 }
 
-// Static template to prevent empty state
-const STATIC_TEMPLATE: Template = {
-  id: 'static-coffee',
-  name: 'Coffee Shop Payment',
-  amount: '5.00',
-  currency: 'USDC',
-  label: 'Coffee Purchase',
-  message: 'Thank you for your order!',
-  web3AuthUserId: 'static',
-  createdAt: new Date().toISOString(),
-  isStatic: true
-};
+// Removed static template fallback - backend should handle empty states
 
 export const templatesApi = {
   async getTemplates(userId: string): Promise<Template[]> {
@@ -58,14 +47,10 @@ export const templatesApi = {
         throw new Error(result.error || 'Failed to fetch templates');
       }
 
-      const userTemplates = result.data || result.templates || [];
-      
-      // Always include static template
-      return [STATIC_TEMPLATE, ...userTemplates];
+      return result.data || result.templates || [];
     } catch (error) {
       console.error('Templates API error:', error);
-      // Return static template on error to prevent empty state
-      return [STATIC_TEMPLATE];
+      return [];
     }
   },
 
@@ -122,18 +107,6 @@ export const templatesApi = {
   },
 
   async createPaymentFromTemplate(templateId: string, customerEmail?: string, userId?: string): Promise<any> {
-    // Handle static template differently - create payment directly
-    if (templateId === 'static-coffee') {
-      const { paymentsApi } = await import('./payments');
-      return paymentsApi.createPayment({
-        amount: 5.00,
-        label: 'Coffee Purchase',
-        message: 'Thank you for your order!',
-        customerEmail,
-        web3AuthUserId: userId || '',
-      });
-    }
-
     const response = await fetch(`${appConfig.apiUrl}/api/templates/${templateId}/create-payment`, {
       method: 'POST',
       headers: getApiHeaders(userId),

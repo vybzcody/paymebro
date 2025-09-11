@@ -1,6 +1,6 @@
 import { MetricsCards } from "./metrics-cards";
 import { PaymentTrendsChart } from "../../pages/payment-trends-chart";
-import { RecentPayments } from "../../pages/recent-payments";
+import { RecentPayments } from "./recent-payments";
 import { QuickActions } from "./quick-actions";
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutTemplate, Wallet } from "lucide-react";
@@ -15,9 +15,10 @@ interface DashboardProps {
   onCreatePayment: () => void;
   onViewTemplates: () => void;
   onViewWallets?: () => void;
+  onViewAnalytics?: () => void;
 }
 
-export function Dashboard({ user, onCreatePayment, onViewTemplates, onViewWallets }: DashboardProps) {
+export function Dashboard({ user, onCreatePayment, onViewTemplates, onViewWallets, onViewAnalytics }: DashboardProps) {
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
@@ -63,10 +64,7 @@ export function Dashboard({ user, onCreatePayment, onViewTemplates, onViewWallet
       <QuickActions
         onCreatePayment={onCreatePayment}
         onCreateTemplate={onViewTemplates}
-        onViewAnalytics={() => { }}
-
-      // onViewTemplates={onViewTemplates}
-      // onViewWallets={onViewWallets}
+        onViewAnalytics={onViewAnalytics || (() => {})}
       />
     </div>
   );
