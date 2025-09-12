@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 // IMP START - Quick Start
 import { WEB3AUTH_NETWORK, CHAIN_NAMESPACES } from "@web3auth/modal";
 import { type Web3AuthContextConfig } from "@web3auth/modal/react";

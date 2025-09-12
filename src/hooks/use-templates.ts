@@ -6,7 +6,7 @@ export const useTemplates = (userId: string) => {
 
   const templatesQuery = useQuery({
     queryKey: ['templates', userId],
-    queryFn: () => templatesApi.getUserTemplates(userId),
+    queryFn: () => templatesApi.getTemplates(userId),
     enabled: !!userId,
   });
 
@@ -20,14 +20,14 @@ export const useTemplates = (userId: string) => {
 
   const updateTemplateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<CreateTemplateRequest> }) =>
-      templatesApi.updateTemplate(id, data),
+      templatesApi.updateTemplate(id, data, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates', userId] });
     },
   });
 
   const deleteTemplateMutation = useMutation({
-    mutationFn: (id: string) => templatesApi.deleteTemplate(id),
+    mutationFn: (id: string) => templatesApi.deleteTemplate(id, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates', userId] });
     },

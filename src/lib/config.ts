@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 export const appConfig = {
   apiUrl: (import.meta.env.VITE_API_URL || 'https://paymebro-backend.onrender.com').replace(/\/$/, ''),
   web3AuthClientId: import.meta.env.VITE_WEB3AUTH_CLIENT_ID || '',

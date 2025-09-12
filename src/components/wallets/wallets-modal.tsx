@@ -19,12 +19,23 @@ interface WalletsModalProps {
   onClose: () => void;
 }
 
+interface Wallet {
+  id: string;
+  name: string;
+  address: string;
+  balance: string;
+  currency: string;
+  usdValue: string;
+  network: string;
+  type: 'primary' | 'secondary';
+}
+
 export function WalletsModal({ isOpen, onClose }: WalletsModalProps) {
   const { userInfo } = useWeb3AuthUser();
   const { provider } = useWeb3Auth();
   const { accounts } = useSolanaWallet();
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  const [wallets, setWallets] = useState([]);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 

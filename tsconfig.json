@@ -19,9 +19,6 @@
     },
     "noEmit": true
   },
-  "include": ["src"],
-  "references": [
-    { "path": "./tsconfig.node.json" },
-    { "path": "./tsconfig.app.json" }
-  ]
+  "include": ["src", "src/vite-env.d.ts"],
+  "exclude": ["node_modules", "dist", "**/*.d.ts"]
 }

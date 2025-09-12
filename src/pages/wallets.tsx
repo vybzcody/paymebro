@@ -11,13 +11,24 @@ import { ArrowLeft, AlertCircle, RefreshCw } from "lucide-react";
 import { BalanceService } from "@/lib/wallet/balanceService";
 import { useToast } from "@/hooks/use-toast";
 
+interface Wallet {
+  id: string;
+  name: string;
+  address: string;
+  balance: string;
+  currency: string;
+  usdValue: string;
+  network: string;
+  type: 'primary' | 'secondary';
+}
+
 export default function WalletsPage() {
   const { userInfo } = useWeb3AuthUser();
   const { provider } = useWeb3Auth();
   const { accounts } = useSolanaWallet();
   const { toast } = useToast();
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  const [wallets, setWallets] = useState([]);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [, setLocation] = useLocation();

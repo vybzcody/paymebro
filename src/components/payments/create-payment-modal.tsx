@@ -28,7 +28,8 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
     amount: "",
     label: "",
     message: "",
-    currency: "USDC"
+    currency: "USDC",
+    customerEmail: ""
   });
   const [isLoading, setIsLoading] = useState(false);
   const [paymentResult, setPaymentResult] = useState<any>(null);
@@ -46,9 +47,7 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
     e.preventDefault();
     
     console.log('🎯 Form submission started:', {
-      ...formData,
-      userId,
-      customerEmail: formData.customerEmail || 'none'
+      ...formData
     });
 
     if (!formData.amount || !formData.label) {
@@ -77,6 +76,7 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
         amount: parseFloat(formData.amount),
         label: formData.label,
         message: formData.message || formData.label,
+        customerEmail: formData.customerEmail || undefined,
         web3AuthUserId: userId,
         chain: 'solana',
         splToken
@@ -142,7 +142,7 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
   };
 
   const handleClose = () => {
-    setFormData({ amount: "", label: "", message: "", currency: "USDC" });
+    setFormData({ amount: "", label: "", message: "", currency: "USDC", customerEmail: "" });
     setPaymentResult(null);
     setCopied(false);
     onClose();
@@ -389,6 +389,18 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               rows={3}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="customerEmail">Customer Email (Optional)</Label>
+            <Input
+              id="customerEmail"
+              type="email"
+              placeholder="customer@example.com"
+              value={formData.customerEmail}
+              onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
               disabled={isLoading}
             />
           </div>

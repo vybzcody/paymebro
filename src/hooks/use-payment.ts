@@ -13,8 +13,8 @@ export const usePayment = (userId?: string) => {
       
       return await paymentsApi.createPayment({
         amount: parseFloat(data.amount),
-        label: data.description || 'Payment',
-        message: data.description,
+        label: data.label || 'Payment',
+        message: data.message,
         customerEmail: data.customer_email || undefined,
         web3AuthUserId: userId,
         chain: 'solana',

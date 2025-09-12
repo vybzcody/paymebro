@@ -5,6 +5,10 @@ export interface AnalyticsMetrics {
   totalRevenue: number;
   conversionRate: string;
   totalUsers: number;
+  planUsage?: {
+    current: number;
+    limit: number;
+  };
 }
 
 export interface PaymentHistory {

@@ -9,6 +9,7 @@ import Dashboard from "./pages/dashboard";
 import Wallets from "./pages/wallets";
 import PaymentPage from "./pages/payment";
 import TestPaymentPage from "./pages/test-payment";
+import { AuthUserInfo } from "@web3auth/auth";
 
 function App() {
   const { connect, isConnected, connectorName, loading: connectLoading, error: connectError } = useWeb3AuthConnect();
@@ -26,9 +27,17 @@ function App() {
     profileImage: userInfo.profileImage,
   } : null;
 
-  const getUserId = () => {
+  const getUserId = (): string | undefined => {
     if (!userInfo) return undefined;
-    return userInfo.verifierId || userInfo.aggregateVerifier || userInfo.email || undefined;
+    
+    // Cast to full type when we know properties exist
+    const fullUserInfo = userInfo as AuthUserInfo;
+    
+    if (fullUserInfo.verifierId) return fullUserInfo.verifierId;
+    if (fullUserInfo.aggregateVerifier) return fullUserInfo.aggregateVerifier;
+    if (fullUserInfo.email) return fullUserInfo.email;
+    
+    return undefined;
   };
 
   const loggedInView = (

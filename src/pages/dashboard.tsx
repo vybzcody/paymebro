@@ -16,6 +16,7 @@ import { usersApi } from "@/lib/api/users";
 import { type RecentPaymentsRef } from "@/components/dashboard/recent-payments";
 import { MultiChainKeyService } from "@/lib/wallet/MultiChainKeyService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AuthUserInfo } from "@web3auth/auth";
 
 export default function DashboardPage() {
   const { userInfo } = useWeb3AuthUser();
@@ -31,12 +32,18 @@ export default function DashboardPage() {
   const dashboardRef = useRef<{ refreshPayments: () => void }>(null);
 
   // Get proper user ID from Web3Auth
-  const getUserId = () => {
+  const getUserId = (): string => {
     if (!userInfo) return "unknown";
-    return userInfo.verifierId || userInfo.aggregateVerifier || userInfo.email || "unknown";
+    
+    // Cast to full type when we know properties exist
+    const fullUserInfo = userInfo as AuthUserInfo;
+    
+    if (fullUserInfo.verifierId) return fullUserInfo.verifierId;
+    if (fullUserInfo.aggregateVerifier) return fullUserInfo.aggregateVerifier;
+    if (fullUserInfo.email) return fullUserInfo.email;
+    
+    return "unknown";
   };
-
-  const userId = getUserId();
 
   // Generate valid ETH address from Solana address
   const generateEthAddressFallback = (solanaAddress: string) => {
@@ -52,6 +59,7 @@ export default function DashboardPage() {
   useEffect(() => {
     // Auto-register user if not already registered
     const autoRegisterUser = async () => {
+      const userId = getUserId();
       if (!userInfo || userId === "unknown" || !isConnected || registrationRef.current || registrationAttempted) {
         return;
       }
@@ -103,10 +111,10 @@ export default function DashboardPage() {
     };
 
     // Only run once when all conditions are met
-    if (userInfo && userId !== "unknown" && isConnected && accounts?.[0] && !registrationAttempted) {
+    if (userInfo && getUserId() !== "unknown" && isConnected && accounts?.[0] && !registrationAttempted) {
       autoRegisterUser();
     }
-  }, [userInfo?.verifierId, userInfo?.aggregateVerifier, userInfo?.email, isConnected, accounts?.[0], registrationAttempted]);
+  }, [userInfo && (userInfo as AuthUserInfo).verifierId, userInfo && (userInfo as AuthUserInfo).aggregateVerifier, userInfo?.email, isConnected, accounts?.[0], registrationAttempted]);
 
   if (!userInfo) {
     return (
@@ -134,7 +142,7 @@ export default function DashboardPage() {
   // User object to match the expected interface
   const user = {
     first_name: userInfo.name?.split(' ')[0] || "User",
-    web3auth_user_id: userId,
+    web3auth_user_id: getUserId(),
   };
 
   const handleCreatePayment = () => {
@@ -160,7 +168,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <WebSocketProvider userId={userId}>
+    <WebSocketProvider userId={getUserId()}>
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Tabs defaultValue="dashboard" className="w-full">

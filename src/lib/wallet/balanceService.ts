@@ -45,14 +45,14 @@ export class BalanceService {
    */
   async getEthereumBalance(address: string): Promise<{ balance: string; usdValue: string }> {
     try {
-      const ethProvider = new ethers.providers.Web3Provider(this.provider as any);
+      const ethProvider = new BrowserProvider(this.provider as any);
       
       const [balance, ethPrice] = await Promise.all([
         ethProvider.getBalance(address),
         this.priceService.getEthereumPrice()
       ]);
       
-      const ethBalance = parseFloat(ethers.utils.formatEther(balance));
+      const ethBalance = parseFloat(formatEther(balance));
       const usdValue = (ethBalance * ethPrice).toFixed(2);
       
       return {
@@ -90,7 +90,7 @@ export class BalanceService {
       };
     } catch (error) {
       // Token account might not exist if no USDC received yet
-      console.log('USDC token account not found or empty:', error.message);
+      console.log('USDC token account not found or empty:', error instanceof Error ? error.message : String(error));
       return { balance: '0.00', usdValue: '$0.00' };
     }
   }
