@@ -49,10 +49,13 @@ export function WebSocketProvider({ children, userId }: WebSocketProviderProps) 
     setIsConnecting(true);
     setConnectionError(null);
 
-    const socketInstance = io(appConfig.apiUrl, {
-      transports: ['polling'], // Use polling only for Railway compatibility
+    const socketInstance = io(appConfig.wsUrl, {
+      transports: ['websocket', 'polling'], // Use both WebSocket and polling for better compatibility
       timeout: 20000,
-      reconnection: false, // Disable auto-reconnection to prevent spam
+      reconnection: true, // Enable auto-reconnection
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
     });
 
     const authenticateSocket = async () => {
@@ -89,14 +92,25 @@ export function WebSocketProvider({ children, userId }: WebSocketProviderProps) 
       setIsConnected(false);
       setIsAuthenticated(false);
       setAuthToken(null);
+      
+      // If it's a forced disconnection, don't show error
+      if (reason !== 'io client disconnect' && reason !== 'io server disconnect') {
+        setConnectionError('Disconnected');
+      }
     });
 
     socketInstance.on('connect_error', (error) => {
-      console.warn('WebSocket connection failed, continuing without real-time updates:', error.message);
+      console.warn('WebSocket connection failed:', error.message);
+      console.warn('Error details:', error);
       setIsConnected(false);
       setIsConnecting(false);
       setIsAuthenticated(false);
       setAuthToken(null);
+      // Don't set connectionError here to allow reconnection attempts
+    });
+
+    socketInstance.on('reconnect_failed', () => {
+      console.error('WebSocket reconnection failed after all attempts');
       setConnectionError('Real-time updates unavailable');
     });
 
@@ -110,17 +124,23 @@ export function WebSocketProvider({ children, userId }: WebSocketProviderProps) 
   // Authenticate function
   const authenticate = useCallback(async (): Promise<boolean> => {
     if (!socket || !userId || !isConnected) {
+      console.warn('Cannot authenticate: missing socket, userId, or not connected');
       return false;
     }
 
+    console.log('Attempting WebSocket authentication for user:', userId);
+
     return new Promise((resolve) => {
       socket.emit('authenticate', userId, (response: any) => {
+        console.log('Authentication response:', response);
         if (response?.success && response?.token) {
           setAuthToken(response.token);
           setIsAuthenticated(true);
           setConnectionError(null);
+          console.log('WebSocket authentication successful');
           resolve(true);
         } else {
+          console.error('WebSocket authentication failed:', response?.error);
           setIsAuthenticated(false);
           setAuthToken(null);
           resolve(false);
@@ -131,6 +151,8 @@ export function WebSocketProvider({ children, userId }: WebSocketProviderProps) 
 
   // Reconnect function
   const reconnect = useCallback(() => {
+    console.log('Attempting WebSocket reconnection');
+    setConnectionError(null); // Clear any previous errors
     if (socket) {
       socket.disconnect();
       socket.connect();
