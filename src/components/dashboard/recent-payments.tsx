@@ -2,37 +2,102 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle, XCircle, Eye, Download, Copy, Wifi, WifiOff, RotateCcw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { analyticsApi, type PaymentHistory } from "@/lib/api/analytics";
 import { useWebSocket } from "@/components/providers/websocket-provider";
 import { useToast } from "@/hooks/use-toast";
+import { useApiCache } from "@/hooks/use-api-cache";
+import { appConfig, getApiHeaders } from "@/lib/config";
 
 interface RecentPaymentsProps {
   userId: string;
+  onRefreshNeeded?: () => void;
 }
 
-export function RecentPayments({ userId }: RecentPaymentsProps) {
+export interface RecentPaymentsRef {
+  refresh: () => void;
+}
+
+export const RecentPayments = forwardRef<RecentPaymentsRef, RecentPaymentsProps>(({ userId, onRefreshNeeded }, ref) => {
   const [payments, setPayments] = useState<PaymentHistory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { 
-    socket, 
-    isConnected, 
-    isConnecting, 
-    connectionError, 
-    joinPayment, 
-    leavePayment, 
-    reconnect 
+  const {
+    socket,
+    isConnected,
+    isConnecting,
+    connectionError,
+    joinPayment,
+    leavePayment,
+    reconnect
   } = useWebSocket();
   const { toast } = useToast();
 
+  const fetchPayments = useCallback(async (): Promise<PaymentHistory[]> => {
+    if (!userId || userId === "unknown") {
+      return [];
+    }
+
+    try {
+      return await analyticsApi.getPaymentHistory(userId, 1, 5);
+    } catch (error) {
+      console.error('Failed to fetch payment history:', error);
+      return [];
+    }
+  }, [userId]);
+
+  const { data: cachedPayments, loading: isLoading, refetch } = useApiCache(
+    `recent-payments-${userId}`,
+    fetchPayments,
+    [userId],
+    { cacheTime: 1 * 60 * 1000, staleTime: 15 * 1000 } // Cache for 1 minute, stale after 15 seconds
+  );
+
+  // Update local state when cached data changes
+  useEffect(() => {
+    if (cachedPayments) {
+      setPayments(cachedPayments);
+    }
+  }, [cachedPayments]);
+
+  // Expose refetch function for parent components
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  // Expose refresh function to parent via ref
+  useImperativeHandle(ref, () => ({
+    refresh: handleRefresh
+  }), [handleRefresh]);
+
   const handleView = (payment: PaymentHistory) => {
-    window.open(`http://localhost:3000/payment/${payment.reference}`, '_blank');
+    const paymentUrl = `${window.location.origin}/payment/${payment.reference}`;
+    window.open(paymentUrl, '_blank');
   };
 
   const handleDownloadQR = async (payment: PaymentHistory) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/payments/${payment.reference}/qr`);
-      const blob = await response.blob();
+      const response = await fetch(`${appConfig.apiUrl}/api/payments/${payment.reference}/qr`, {
+        headers: getApiHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to fetch QR code`);
+      }
+
+      const result = await response.json();
+      if (!result.success || !result.qrCode) {
+        throw new Error('Invalid QR code response');
+      }
+
+      // Convert data URI to blob for download
+      const base64Data = result.qrCode.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/png' });
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -41,12 +106,13 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       toast({
         title: "QR Code Downloaded",
         description: "Payment QR code saved to downloads"
       });
     } catch (error) {
+      console.error('Failed to download QR code:', error);
       toast({
         title: "Download Failed",
         description: "Could not download QR code",
@@ -56,7 +122,7 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
   };
 
   const handleCopyLink = (payment: PaymentHistory) => {
-    const link = `http://localhost:3000/payment/${payment.reference}`;
+    const link = `${window.location.origin}/payment/${payment.reference}`;
     navigator.clipboard.writeText(link);
     toast({
       title: "Link Copied",
@@ -64,23 +130,7 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
     });
   };
 
-  useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        const data = await analyticsApi.getPaymentHistory(userId, 1, 5);
-        setPayments(data);
-      } catch (error) {
-        console.error('Failed to fetch payment history:', error);
-        setPayments([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    if (userId) {
-      fetchPayments();
-    }
-  }, [userId]);
 
   // Listen for real-time payment updates and join payment rooms
   useEffect(() => {
@@ -95,14 +145,14 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
 
     const handlePaymentUpdate = (update: any) => {
       console.log('Received payment update:', update);
-      setPayments(prev => 
-        prev.map(payment => 
-          payment.reference === update.reference 
+      setPayments(prev =>
+        prev.map(payment =>
+          payment.reference === update.reference
             ? { ...payment, status: update.status === 'confirmed' ? 'completed' : update.status }
             : payment
         )
       );
-      
+
       // Show toast notification for payment status changes
       if (update.status === 'confirmed') {
         toast({
@@ -123,14 +173,14 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
     return () => {
       // Leave all payment rooms when component unmounts
       payments.forEach(payment => {
-        leavePayment(payment.reference).catch(err => 
+        leavePayment(payment.reference).catch(err =>
           console.error('Error leaving payment room:', err)
         );
       });
-      
+
       socket.off('payment-update', handlePaymentUpdate);
     };
-  }, [socket, isConnected, payments, joinPayment, leavePayment, toast]);
+  }, [socket, isConnected, payments.length, joinPayment, leavePayment, toast]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -151,7 +201,7 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
       pending: "bg-yellow-100 text-yellow-800",
       failed: "bg-red-100 text-red-800",
     };
-    
+
     return (
       <Badge className={variants[status as keyof typeof variants] || "bg-gray-100 text-gray-800"}>
         {status}
@@ -237,9 +287,9 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
         {connectionError && (
           <div className="text-sm text-red-600 flex items-center gap-2">
             <span>{connectionError}</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={reconnect}
               className="h-6 text-xs"
             >
@@ -322,4 +372,4 @@ export function RecentPayments({ userId }: RecentPaymentsProps) {
       </CardContent>
     </Card>
   );
-}
+});

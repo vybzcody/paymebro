@@ -22,7 +22,6 @@ export interface PaymentHistory {
 export const analyticsApi = {
   async getMetrics(userId: string): Promise<AnalyticsMetrics> {
     try {
-      // Use the working analytics endpoint
       const response = await fetch(`${appConfig.apiUrl}/api/analytics`, {
         headers: getApiHeaders(userId),
       });
@@ -41,11 +40,10 @@ export const analyticsApi = {
         totalPayments: metrics.totalPayments || 0,
         totalRevenue: metrics.totalRevenue || 0,
         conversionRate: metrics.conversionRate || '0',
-        totalUsers: metrics.totalUsers || 0
+        totalUsers: 1
       };
     } catch (error) {
       console.error('Analytics API error:', error);
-      // Return default metrics on error
       return {
         totalPayments: 0,
         totalRevenue: 0,
@@ -57,12 +55,9 @@ export const analyticsApi = {
 
   async getPaymentHistory(userId: string, page = 1, limit = 10): Promise<PaymentHistory[]> {
     try {
-      const response = await fetch(
-        `${appConfig.apiUrl}/api/analytics/history?page=${page}&limit=${limit}`,
-        {
-          headers: getApiHeaders(userId),
-        }
-      );
+      const response = await fetch(`${appConfig.apiUrl}/api/analytics/history?page=${page}&limit=${limit}`, {
+        headers: getApiHeaders(userId),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Failed to fetch payment history`);
@@ -73,21 +68,18 @@ export const analyticsApi = {
         throw new Error(result.error || 'Failed to fetch payment history');
       }
 
-      // Filter payments by user ID and transform data
-      const allPayments = result.payments || [];
-      return allPayments
-        .filter((payment: any) => payment.web3auth_user_id === userId)
-        .map((payment: any) => ({
-          id: payment.id || payment.reference,
-          reference: payment.reference,
-          amount: parseFloat(payment.amount || 0),
-          currency: payment.currency || 'USDC',
-          status: payment.status === 'confirmed' ? 'completed' : payment.status,
-          timestamp: payment.created_at,
-          created_at: payment.created_at,
-          description: payment.label || payment.message || 'Payment',
-          label: payment.label
-        }));
+      const payments = result.payments || [];
+      return payments.map((payment: any) => ({
+        id: payment.id || payment.reference,
+        reference: payment.reference,
+        amount: parseFloat(payment.amount || 0),
+        currency: payment.currency || 'USDC',
+        status: payment.status === 'confirmed' ? 'completed' : payment.status,
+        timestamp: payment.created_at,
+        created_at: payment.created_at,
+        description: payment.label || payment.message || 'Payment',
+        label: payment.label
+      }));
     } catch (error) {
       console.error('Payment history API error:', error);
       return [];

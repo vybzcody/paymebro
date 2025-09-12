@@ -1,39 +1,44 @@
 import { Card } from "@/components/ui/card";
 import { CreditCard, DollarSign, TrendingUp, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { analyticsApi, type AnalyticsMetrics } from "@/lib/api/analytics";
+import { useApiCache } from "@/hooks/use-api-cache";
 
 interface MetricsCardsProps {
   userId: string;
 }
 
 export function MetricsCards({ userId }: MetricsCardsProps) {
-  const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const fetchMetrics = useCallback(async (): Promise<AnalyticsMetrics> => {
+    if (!userId || userId === "unknown") {
+      return {
+        totalPayments: 0,
+        totalRevenue: 0,
+        conversionRate: '0',
+        totalUsers: 0
+      };
+    }
 
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const data = await analyticsApi.getMetrics(userId);
-        setMetrics(data);
-      } catch (error) {
-        console.error('Failed to fetch metrics:', error);
-        // Use default metrics on error
-        setMetrics({
-          totalPayments: 0,
-          totalRevenue: 0,
-          conversionRate: '0',
-          totalUsers: 0
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (userId) {
-      fetchMetrics();
+    try {
+      return await analyticsApi.getMetrics(userId);
+    } catch (error) {
+      console.error('Failed to fetch metrics:', error);
+      // Return default metrics on error
+      return {
+        totalPayments: 0,
+        totalRevenue: 0,
+        conversionRate: '0',
+        totalUsers: 0
+      };
     }
   }, [userId]);
+
+  const { data: metrics, loading: isLoading } = useApiCache(
+    `metrics-${userId}`,
+    fetchMetrics,
+    [userId],
+    { cacheTime: 2 * 60 * 1000, staleTime: 30 * 1000 } // Cache for 2 minutes, stale after 30 seconds
+  );
 
   const metricCards = [
     {

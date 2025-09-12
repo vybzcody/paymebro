@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
 import { User, Bell, Wallet, Save } from "lucide-react";
+import { appConfig, getApiHeaders } from "@/lib/config";
 
 interface UserProfile {
   web3AuthUserId: string;
@@ -37,7 +38,9 @@ export function SettingsManagement({ userId }: SettingsManagementProps) {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/users/profile/${userId}`);
+      const response = await fetch(`${appConfig.apiUrl}/api/users/profile/${userId}`, {
+        headers: getApiHeaders(userId)
+      });
       const result = await response.json();
       if (result.success) {
         setProfile(result.user);
@@ -51,15 +54,12 @@ export function SettingsManagement({ userId }: SettingsManagementProps) {
 
   const saveProfile = async () => {
     if (!profile) return;
-    
+
     setIsSaving(true);
     try {
-      const response = await fetch(`http://localhost:3000/api/users/profile/${userId}`, {
+      const response = await fetch(`${appConfig.apiUrl}/api/users/profile/${userId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': userId
-        },
+        headers: getApiHeaders(userId),
         body: JSON.stringify({
           businessName: profile.businessName,
           businessType: profile.businessType
@@ -137,7 +137,7 @@ export function SettingsManagement({ userId }: SettingsManagementProps) {
               />
             </div>
           </div>
-          
+
           <div>
             <Label htmlFor="businessType">Business Type</Label>
             <Input
@@ -208,7 +208,7 @@ export function SettingsManagement({ userId }: SettingsManagementProps) {
               onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, paymentConfirmations: checked }))}
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="invoiceReminders">Invoice Reminders</Label>
@@ -220,7 +220,7 @@ export function SettingsManagement({ userId }: SettingsManagementProps) {
               onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, invoiceReminders: checked }))}
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="subscriptionUpdates">Subscription Updates</Label>

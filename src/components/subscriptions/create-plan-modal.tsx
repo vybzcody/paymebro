@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { appConfig, getApiHeaders } from "@/lib/config";
 
 interface CreatePlanModalProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, userId }: CreatePl
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.amount) {
       toast({
         title: "Missing Fields",
@@ -43,12 +44,9 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, userId }: CreatePl
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:3000/api/subscriptions/plans', {
+      const response = await fetch(`${appConfig.apiUrl}/api/subscriptions/plans`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': userId
-        },
+        headers: getApiHeaders(userId),
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
@@ -68,7 +66,7 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, userId }: CreatePl
           title: "Plan Created!",
           description: `${formData.name} subscription plan created successfully`
         });
-        
+
         onSuccess();
         onClose();
         setFormData({
@@ -106,7 +104,7 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, userId }: CreatePl
         <DialogHeader>
           <DialogTitle>Create Subscription Plan</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="name">Plan Name</Label>

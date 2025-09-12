@@ -109,6 +109,13 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
       toast({
         title: "Payment Created!",
         description: `${formData.currency} payment request created successfully`,
+        action: (
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">
+              Ensure payer has sufficient SOL for gas fees
+            </span>
+          </div>
+        ),
       });
     } catch (error) {
       console.error('💥 Payment creation failed:', error);
@@ -209,6 +216,9 @@ export function CreatePaymentModal({ isOpen, onClose, userId }: CreatePaymentMod
                 {formData.amount} {formData.currency}
               </div>
               <div className="text-sm text-green-600">{formData.label}</div>
+              <div className="text-xs text-muted-foreground mt-2">
+                Payer needs sufficient SOL for gas fees
+              </div>
             </div>
 
             {/* QR Code */}

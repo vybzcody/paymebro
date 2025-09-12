@@ -4,9 +4,12 @@ export interface CreatePaymentRequest {
   amount: number;
   label: string;
   message?: string;
+  memo?: string;
+  customerEmail?: string;
   web3AuthUserId: string;
   chain?: string;
   splToken?: string;
+  merchantWallet?: string; // Allow custom merchant wallet
 }
 
 export interface PaymentResponse {
@@ -14,7 +17,15 @@ export interface PaymentResponse {
   reference: string;
   url: string;
   paymentUrl: string;
-  qrCode: string;
+  payment: {
+    id: string;
+    reference: string;
+    amount: string;
+    currency: string;
+    status: string;
+    recipient_address: string;
+    created_at: string;
+  };
 }
 
 export interface PaymentStatus {
@@ -39,9 +50,15 @@ export const paymentsApi = {
       ...(paymentData.splToken && {
         splToken: paymentData.splToken
       }),
-      // Remove empty customerEmail to avoid validation error
+      // Include optional fields if provided
       ...(paymentData.customerEmail && paymentData.customerEmail.trim() && {
         customerEmail: paymentData.customerEmail.trim()
+      }),
+      ...(paymentData.memo && {
+        memo: paymentData.memo
+      }),
+      ...(paymentData.merchantWallet && {
+        merchantWallet: paymentData.merchantWallet
       })
     };
 
@@ -76,10 +93,34 @@ export const paymentsApi = {
     return result;
   },
 
+  async getPayment(reference: string): Promise<any> {
+    console.log('🔍 Getting payment details for:', reference);
+
+    const response = await fetch(`${appConfig.apiUrl}${appConfig.endpoints.payments}/${reference}`, {
+      headers: getApiHeaders()
+    });
+
+    if (!response.ok) {
+      console.error('❌ Failed to get payment:', response.status);
+      throw new Error(`HTTP ${response.status}: Failed to get payment`);
+    }
+
+    const result = await response.json();
+    console.log('📊 Payment details:', result);
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to get payment');
+    }
+
+    return result.payment;
+  },
+
   async getPaymentStatus(reference: string): Promise<PaymentStatus> {
     console.log('🔍 Getting payment status for:', reference);
 
-    const response = await fetch(`${appConfig.apiUrl}${appConfig.endpoints.payments}/${reference}/status`);
+    const response = await fetch(`${appConfig.apiUrl}${appConfig.endpoints.payments}/${reference}/status`, {
+      headers: getApiHeaders()
+    });
 
     if (!response.ok) {
       console.error('❌ Failed to get payment status:', response.status);
@@ -93,7 +134,67 @@ export const paymentsApi = {
       throw new Error(result.error || 'Failed to get payment status');
     }
 
-    return result.data;
+    return {
+      reference: result.reference,
+      status: result.status,
+      amount: 0, // Will be filled from payment details if needed
+      timestamp: new Date().toISOString(),
+      signature: result.transaction_signature
+    };
+  },
+
+  async getQRCode(reference: string): Promise<{ qrCode: string }> {
+    console.log('🔍 Getting QR code for:', reference);
+
+    const response = await fetch(`${appConfig.apiUrl}${appConfig.endpoints.payments}/${reference}/qr`, {
+      headers: getApiHeaders()
+    });
+
+    if (!response.ok) {
+      console.error('❌ Failed to get QR code:', response.status);
+      throw new Error(`HTTP ${response.status}: Failed to get QR code`);
+    }
+
+    const result = await response.json();
+    console.log('📊 QR code result:', result);
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to get QR code');
+    }
+
+    return { qrCode: result.qrCode };
+  },
+
+  async getPaymentHistory(userId: string, page = 1, limit = 10): Promise<{ payments: any[], totalPages: number }> {
+    console.log('🔍 Getting payment history for user:', userId);
+
+    const response = await fetch(
+      `${appConfig.apiUrl}/api/analytics/history?page=${page}&limit=${limit}`,
+      {
+        headers: getApiHeaders(userId),
+      }
+    );
+
+    if (!response.ok) {
+      console.error('❌ Failed to get payment history:', response.status);
+      throw new Error(`HTTP ${response.status}: Failed to get payment history`);
+    }
+
+    const result = await response.json();
+    console.log('📊 Payment history:', result);
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to get payment history');
+    }
+
+    // Filter payments by user ID
+    const allPayments = result.payments || [];
+    const userPayments = allPayments.filter((payment: any) => payment.web3auth_user_id === userId);
+
+    return {
+      payments: userPayments,
+      totalPages: Math.ceil(userPayments.length / limit)
+    };
   },
 
   async confirmPayment(signature: string, reference: string): Promise<boolean> {

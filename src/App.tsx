@@ -7,6 +7,8 @@ import { WebSocketProvider } from "./components/providers/websocket-provider";
 import Landing from "./pages/landing";
 import Dashboard from "./pages/dashboard";
 import Wallets from "./pages/wallets";
+import PaymentPage from "./pages/payment";
+import TestPaymentPage from "./pages/test-payment";
 
 function App() {
   const { connect, isConnected, connectorName, loading: connectLoading, error: connectError } = useWeb3AuthConnect();
@@ -32,7 +34,7 @@ function App() {
   const loggedInView = (
     <WebSocketProvider userId={getUserId()}>
       <div className="min-h-screen bg-white">
-        <Navbar 
+        <Navbar
           user={user}
           address={accounts?.[0]}
           network="devnet"
@@ -55,9 +57,16 @@ function App() {
     </div>
   );
 
+  // Payment pages should be accessible without authentication
   return (
     <div className="min-h-screen w-full">
-      {isConnected ? loggedInView : unloggedInView}
+      <Switch>
+        <Route path="/payment/:reference" component={PaymentPage} />
+        <Route path="/test-payment" component={TestPaymentPage} />
+        <Route>
+          {isConnected ? loggedInView : unloggedInView}
+        </Route>
+      </Switch>
     </div>
   );
 }

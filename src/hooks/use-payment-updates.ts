@@ -9,7 +9,7 @@ interface PaymentUpdate {
   timestamp?: string;
 }
 
-export function usePaymentUpdates(reference?: string) {
+export function usePaymentUpdates(reference?: string, onUpdate?: (update: PaymentUpdate) => void) {
   const { socket, isConnected, joinPayment, leavePayment } = useWebSocket();
   const [lastUpdate, setLastUpdate] = useState<PaymentUpdate | null>(null);
 
@@ -23,6 +23,7 @@ export function usePaymentUpdates(reference?: string) {
     const handlePaymentUpdate = (update: PaymentUpdate) => {
       if (update.reference === reference) {
         setLastUpdate(update);
+        onUpdate?.(update);
       }
     };
 
@@ -32,7 +33,7 @@ export function usePaymentUpdates(reference?: string) {
       socket.off('payment-update', handlePaymentUpdate);
       leavePayment(reference);
     };
-  }, [socket, isConnected, reference, joinPayment, leavePayment]);
+  }, [socket, isConnected, reference, joinPayment, leavePayment, onUpdate]);
 
   return { lastUpdate, isConnected };
 }

@@ -12,18 +12,19 @@ export interface UserProfile {
 }
 
 export interface RegisterUserRequest {
-  web3AuthUserId: string;
+  web3auth_user_id: string;
   email: string;
-  solanaAddress: string;
-  ethereumAddress: string;
+  name?: string;
+  solana_address?: string;
+  ethereum_address?: string;
 }
 
 export interface CompleteOnboardingRequest {
-  web3AuthUserId: string;
-  firstName: string;
-  lastName: string;
-  businessName: string;
-  phoneNumber?: string;
+  web3auth_user_id: string;
+  first_name: string;
+  last_name: string;
+  business_name?: string;
+  phone_number?: string;
   country?: string;
 }
 
@@ -78,7 +79,7 @@ export const usersApi = {
   async completeOnboarding(onboardingData: CompleteOnboardingRequest): Promise<UserProfile> {
     const response = await fetch(`${appConfig.apiUrl}${appConfig.endpoints.users}/onboarding/complete`, {
       method: 'POST',
-      headers: getApiHeaders(onboardingData.web3AuthUserId),
+      headers: getApiHeaders(onboardingData.web3auth_user_id),
       body: JSON.stringify(onboardingData),
     });
 

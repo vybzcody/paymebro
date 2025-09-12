@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { Mail, Send, Clock, CheckCircle, XCircle } from "lucide-react";
+import { appConfig, getApiHeaders } from "@/lib/config";
 
 interface Notification {
   id: string;
@@ -28,7 +29,9 @@ export function NotificationManagement({ userId }: NotificationManagementProps) 
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/notifications/user/${userId}`);
+      const response = await fetch(`${appConfig.apiUrl}/api/notifications/user/${userId}`, {
+        headers: getApiHeaders(userId)
+      });
       const result = await response.json();
       if (result.success) {
         setNotifications(result.notifications || []);
@@ -42,9 +45,9 @@ export function NotificationManagement({ userId }: NotificationManagementProps) 
 
   const processNotifications = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/notifications/process', {
+      const response = await fetch(`${appConfig.apiUrl}/api/notifications/process`, {
         method: 'POST',
-        headers: { 'x-user-id': userId }
+        headers: getApiHeaders(userId)
       });
       const result = await response.json();
       if (result.success) {

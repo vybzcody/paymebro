@@ -1,9 +1,10 @@
 import { MetricsCards } from "./metrics-cards";
 import { PaymentTrendsChart } from "../../pages/payment-trends-chart";
-import { RecentPayments } from "./recent-payments";
+import { RecentPayments, type RecentPaymentsRef } from "./recent-payments";
 import { QuickActions } from "./quick-actions";
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutTemplate, Wallet } from "lucide-react";
+import { useRef } from "react";
 
 interface User {
   first_name?: string;
@@ -16,9 +17,11 @@ interface DashboardProps {
   onViewTemplates: () => void;
   onViewWallets?: () => void;
   onViewAnalytics?: () => void;
+  onPaymentCreated?: () => void;
 }
 
-export function Dashboard({ user, onCreatePayment, onViewTemplates, onViewWallets, onViewAnalytics }: DashboardProps) {
+export function Dashboard({ user, onCreatePayment, onViewTemplates, onViewWallets, onViewAnalytics, onPaymentCreated }: DashboardProps) {
+  const recentPaymentsRef = useRef<RecentPaymentsRef>(null);
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
@@ -57,14 +60,14 @@ export function Dashboard({ user, onCreatePayment, onViewTemplates, onViewWallet
       {/* Charts and Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <PaymentTrendsChart userId={user.web3auth_user_id} />
-        <RecentPayments userId={user.web3auth_user_id} />
+        <RecentPayments ref={recentPaymentsRef} userId={user.web3auth_user_id} />
       </div>
 
       {/* Quick Actions */}
       <QuickActions
         onCreatePayment={onCreatePayment}
         onCreateTemplate={onViewTemplates}
-        onViewAnalytics={onViewAnalytics || (() => {})}
+        onViewAnalytics={onViewAnalytics || (() => { })}
       />
     </div>
   );

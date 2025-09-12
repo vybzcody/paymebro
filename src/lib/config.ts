@@ -1,5 +1,5 @@
 export const appConfig = {
-  apiUrl: (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, ''),
+  apiUrl: (import.meta.env.VITE_API_URL || 'https://paymebro-backend.onrender.com').replace(/\/$/, ''),
   web3AuthClientId: import.meta.env.VITE_WEB3AUTH_CLIENT_ID || '',
   
   // API endpoints
@@ -8,6 +8,20 @@ export const appConfig = {
     analytics: '/api/analytics', 
     users: '/api/users',
     templates: '/api/templates',
+    merchantAddresses: '/api/users',
+    notifications: '/api/notifications',
+    subscriptions: '/api/subscriptions',
+  },
+
+  // WebSocket configuration
+  wsUrl: (import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL || 'https://paymebro-backend.onrender.com').replace(/\/$/, ''),
+  
+  // Feature flags
+  features: {
+    merchantAddresses: true,
+    subscriptions: true,
+    notifications: true,
+    realTimeUpdates: true,
   }
 };
 

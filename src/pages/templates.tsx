@@ -1,46 +1,58 @@
 import { useWeb3AuthUser } from "@web3auth/modal/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { templatesApi, type Template } from "@/lib/api/templates";
 import { TemplatesList } from "@/components/templates/templates-list";
 import { CreateTemplateModal } from "@/components/templates/create-template-modal";
 import { EditTemplateModal } from "@/components/templates/edit-template-modal";
 import { UseTemplateModal } from "@/components/templates/use-template-modal";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Plus, AlertCircle, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TemplatesPage() {
   const { userInfo } = useWeb3AuthUser();
+  const { toast } = useToast();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [usingTemplate, setUsingTemplate] = useState<Template | null>(null);
 
-  const getUserId = () => {
+  // Memoize user ID to prevent unnecessary re-renders
+  const userId = useMemo(() => {
     if (!userInfo) return "unknown";
-    return userInfo.verifierId || userInfo.aggregateVerifier || userInfo.email || "unknown";
-  };
+    // Use email as the primary identifier for Web3Auth users
+    return userInfo.email || userInfo.name || "unknown";
+  }, [userInfo]);
 
-  const userId = getUserId();
+  const fetchTemplates = useCallback(async () => {
+    if (userId === "unknown") return;
 
-  const fetchTemplates = async () => {
     try {
+      setIsLoading(true);
+      setError(null);
       const data = await templatesApi.getTemplates(userId);
       setTemplates(data);
     } catch (error) {
       console.error('Failed to fetch templates:', error);
+      setError('Failed to load templates');
+      toast({
+        title: "Error",
+        description: "Failed to load templates",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, toast]);
 
   useEffect(() => {
-    if (userId !== "unknown") {
-      fetchTemplates();
-    }
-  }, [userId]);
+    fetchTemplates();
+  }, [fetchTemplates]);
 
-  const handleCreateTemplate = async (templateData: any) => {
+  const handleCreateTemplate = useCallback(async (templateData: any) => {
     try {
       await templatesApi.createTemplate({
         ...templateData,
@@ -48,43 +60,79 @@ export default function TemplatesPage() {
       });
       await fetchTemplates();
       setIsCreateModalOpen(false);
+      toast({
+        title: "Success",
+        description: "Template created successfully",
+      });
     } catch (error) {
       console.error('Failed to create template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create template",
+        variant: "destructive",
+      });
       throw error;
     }
-  };
+  }, [userId, fetchTemplates, toast]);
 
-  const handleEditTemplate = async (templateId: string, updates: any) => {
+  const handleEditTemplate = useCallback(async (templateId: string, updates: any) => {
     try {
       await templatesApi.updateTemplate(templateId, updates, userId);
       await fetchTemplates();
       setEditingTemplate(null);
+      toast({
+        title: "Success",
+        description: "Template updated successfully",
+      });
     } catch (error) {
       console.error('Failed to update template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update template",
+        variant: "destructive",
+      });
       throw error;
     }
-  };
+  }, [userId, fetchTemplates, toast]);
 
-  const handleDeleteTemplate = async (templateId: string) => {
+  const handleDeleteTemplate = useCallback(async (templateId: string) => {
     try {
       await templatesApi.deleteTemplate(templateId, userId);
       await fetchTemplates();
+      toast({
+        title: "Success",
+        description: "Template deleted successfully",
+      });
     } catch (error) {
       console.error('Failed to delete template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete template",
+        variant: "destructive",
+      });
       throw error;
     }
-  };
+  }, [userId, fetchTemplates, toast]);
 
-  const handleUseTemplate = async (templateId: string, customerEmail?: string) => {
+  const handleUseTemplate = useCallback(async (templateId: string, customerEmail?: string) => {
     try {
       const result = await templatesApi.createPaymentFromTemplate(templateId, customerEmail, userId);
       setUsingTemplate(null);
+      toast({
+        title: "Success",
+        description: "Payment created from template",
+      });
       return result;
     } catch (error) {
       console.error('Failed to create payment from template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create payment from template",
+        variant: "destructive",
+      });
       throw error;
     }
-  };
+  }, [userId, toast]);
 
   if (!userInfo) {
     return (
@@ -92,6 +140,23 @@ export default function TemplatesPage() {
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading templates...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <Button onClick={fetchTemplates} className="mt-4">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Retry
+          </Button>
         </div>
       </div>
     );

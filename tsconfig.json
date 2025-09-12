@@ -16,11 +16,12 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "noEmit": true
   },
-  "include": ["src", "src/components/sendTransaction.tsx", "src/components/switchNetwork.tsx", "src/components/writeContract.tsx", "src/components/getBalance.tsx"],
+  "include": ["src"],
   "references": [
     { "path": "./tsconfig.node.json" },
-     { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.app.json" }
   ]
 }

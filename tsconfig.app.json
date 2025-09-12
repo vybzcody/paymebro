@@ -14,7 +14,7 @@
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "emitDeclarationOnly": true,
+    "emitDeclarationOnly": false,
 
     /* Linting */
     "strict": false,

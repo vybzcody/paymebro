@@ -3,15 +3,17 @@ import { useWeb3Auth } from "@web3auth/modal/react";
 import { useSolanaWallet } from "@web3auth/modal/react/solana";
 import { useLocation } from "wouter";
 import { Dashboard as DashboardComponent } from "@/components/dashboard/dashboard";
-import { CreatePaymentModal } from "@/components/payments/create-payment-modal";
+import { CreatePaymentWithAddress } from "@/components/payments/create-payment-with-address";
 import { TemplatesModal } from "@/components/templates/templates-modal";
 import { NotificationManagement } from "@/components/notifications/notification-management";
 import { SubscriptionManagement } from "@/components/subscriptions/subscription-management";
 import { SettingsManagement } from "@/components/settings/settings-management";
+import { MerchantAddressManagement } from "@/components/merchant-addresses/merchant-address-management";
 import { AnalyticsPage } from "@/pages/analytics";
 import { WebSocketProvider } from "@/components/providers/websocket-provider";
 import { useState, useEffect, useRef } from "react";
 import { usersApi } from "@/lib/api/users";
+import { type RecentPaymentsRef } from "@/components/dashboard/recent-payments";
 import { MultiChainKeyService } from "@/lib/wallet/MultiChainKeyService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -26,6 +28,7 @@ export default function DashboardPage() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationAttempted, setRegistrationAttempted] = useState(false);
   const registrationRef = useRef(false);
+  const dashboardRef = useRef<{ refreshPayments: () => void }>(null);
 
   // Get proper user ID from Web3Auth
   const getUserId = () => {
@@ -52,17 +55,17 @@ export default function DashboardPage() {
       if (!userInfo || userId === "unknown" || !isConnected || registrationRef.current || registrationAttempted) {
         return;
       }
-      
+
       registrationRef.current = true;
       setIsRegistering(true);
-      
+
       try {
         // Check if user exists
         const existingUser = await usersApi.getUserProfile(userId);
-        
+
         if (!existingUser) {
           console.log("Auto-registering user:", userId);
-          
+
           let solanaAddress = "";
           let ethereumAddress = "";
 
@@ -78,12 +81,13 @@ export default function DashboardPage() {
 
           if (solanaAddress && ethereumAddress) {
             await usersApi.registerUser({
-              web3AuthUserId: userId,
+              web3auth_user_id: userId,
               email: userInfo.email || `${userId}@web3auth.user`,
-              solanaAddress,
-              ethereumAddress,
+              name: userInfo.name || '',
+              solana_address: solanaAddress,
+              ethereum_address: ethereumAddress,
             });
-            
+
             console.log("User auto-registered successfully");
           }
         } else {
@@ -102,7 +106,7 @@ export default function DashboardPage() {
     if (userInfo && userId !== "unknown" && isConnected && accounts?.[0] && !registrationAttempted) {
       autoRegisterUser();
     }
-  }, [userInfo, userId, isConnected, accounts, registrationAttempted]);
+  }, [userInfo?.verifierId, userInfo?.aggregateVerifier, userInfo?.email, isConnected, accounts?.[0], registrationAttempted]);
 
   if (!userInfo) {
     return (
@@ -148,7 +152,7 @@ export default function DashboardPage() {
   // Show analytics page if requested
   if (showAnalytics) {
     return (
-      <AnalyticsPage 
+      <AnalyticsPage
         onBack={() => setShowAnalytics(false)}
         userId={user.web3auth_user_id}
       />
@@ -166,7 +170,7 @@ export default function DashboardPage() {
               <TabsTrigger value="notifications" className="text-xs md:text-sm">Notifications</TabsTrigger>
               <TabsTrigger value="settings" className="text-xs md:text-sm">Settings</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="dashboard" className="mt-6">
               <DashboardComponent
                 user={user}
@@ -176,25 +180,33 @@ export default function DashboardPage() {
                 onViewAnalytics={() => setShowAnalytics(true)}
               />
             </TabsContent>
-            
+
             <TabsContent value="subscriptions" className="mt-6">
               <SubscriptionManagement userId={user.web3auth_user_id} />
             </TabsContent>
-            
+
             <TabsContent value="notifications" className="mt-6">
               <NotificationManagement userId={user.web3auth_user_id} />
             </TabsContent>
-            
+
             <TabsContent value="settings" className="mt-6">
-              <SettingsManagement userId={user.web3auth_user_id} />
+              <div className="space-y-6">
+                <SettingsManagement userId={user.web3auth_user_id} />
+                <MerchantAddressManagement userId={user.web3auth_user_id} />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
 
-        <CreatePaymentModal
+        <CreatePaymentWithAddress
           isOpen={isPaymentModalOpen}
           onClose={() => setIsPaymentModalOpen(false)}
+          onPaymentCreated={(payment) => {
+            console.log('Payment created:', payment);
+            // You can add additional logic here like showing a success modal
+          }}
           userId={user.web3auth_user_id}
+          userWalletAddress={accounts?.[0] || undefined}
         />
 
         <TemplatesModal

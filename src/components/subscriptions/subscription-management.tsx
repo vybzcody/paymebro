@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { Plus, Users, DollarSign, Calendar, Trash2 } from "lucide-react";
 import { CreatePlanModal } from "./create-plan-modal";
+import { appConfig, getApiHeaders } from "@/lib/config";
 
 interface SubscriptionPlan {
   id: string;
@@ -34,8 +35,8 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
 
   const fetchPlans = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/subscriptions/plans`, {
-        headers: { 'x-user-id': userId }
+      const response = await fetch(`${appConfig.apiUrl}/api/subscriptions/plans`, {
+        headers: getApiHeaders(userId)
       });
       const result = await response.json();
       if (result.success) {
@@ -50,11 +51,11 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
 
   const deletePlan = async (planId: string) => {
     if (!confirm('Are you sure you want to delete this plan?')) return;
-    
+
     try {
-      const response = await fetch(`http://localhost:3000/api/subscriptions/plans/${planId}`, {
+      const response = await fetch(`${appConfig.apiUrl}/api/subscriptions/plans/${planId}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': userId }
+        headers: getApiHeaders(userId)
       });
       if (response.ok) {
         fetchPlans(); // Refresh list
@@ -133,7 +134,7 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
                           {plan.interval_type}
                         </Badge>
                       </div>
-                      
+
                       <div className="flex items-center gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
