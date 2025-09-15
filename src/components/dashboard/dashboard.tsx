@@ -17,7 +17,7 @@ interface DashboardProps {
   onViewTemplates: () => void;
   onViewWallets?: () => void;
   onViewAnalytics?: () => void;
-  onPaymentCreated?: () => void;
+  onPaymentCreated?: (payment: any) => void;
 }
 
 export function Dashboard({ user, onCreatePayment, onViewTemplates, onViewWallets, onViewAnalytics, onPaymentCreated }: DashboardProps) {

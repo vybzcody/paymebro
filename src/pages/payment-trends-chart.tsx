@@ -120,7 +120,7 @@ export function PaymentTrendsChart({ userId }: PaymentTrendsChartProps) {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData}>
+              <LineChart data={trendData || []}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis 
                   dataKey="name" 
