@@ -19,7 +19,6 @@ export interface RecentPaymentsRef {
 }
 
 export const RecentPayments = forwardRef<RecentPaymentsRef, RecentPaymentsProps>(({ userId, onRefreshNeeded }, ref) => {
-  const [payments, setPayments] = useState<PaymentHistory[]>([]);
   const {
     socket,
     isConnected,
@@ -31,7 +30,7 @@ export const RecentPayments = forwardRef<RecentPaymentsRef, RecentPaymentsProps>
   } = useWebSocket();
   const { toast } = useToast();
 
-  const fetchPayments = useCallback(async (): Promise<PaymentHistory[]> => {
+  const fetchPayments = async (): Promise<PaymentHistory[]> => {
     if (!userId || userId === "unknown") {
       return [];
     }
@@ -42,21 +41,14 @@ export const RecentPayments = forwardRef<RecentPaymentsRef, RecentPaymentsProps>
       console.error('Failed to fetch payment history:', error);
       return [];
     }
-  }, [userId]);
+  };
 
-  const { data: cachedPayments, loading: isLoading, refetch } = useApiCache(
+  const { data: payments, loading: isLoading, refetch } = useApiCache(
     `recent-payments-${userId}`,
     fetchPayments,
     [userId],
     { cacheTime: 1 * 60 * 1000, staleTime: 15 * 1000 } // Cache for 1 minute, stale after 15 seconds
   );
-
-  // Update local state when cached data changes
-  useEffect(() => {
-    if (cachedPayments) {
-      setPayments(cachedPayments);
-    }
-  }, [cachedPayments]);
 
   // Expose refetch function for parent components
   const handleRefresh = useCallback(() => {
@@ -130,11 +122,9 @@ export const RecentPayments = forwardRef<RecentPaymentsRef, RecentPaymentsProps>
     });
   };
 
-
-
   // Listen for real-time payment updates and join payment rooms
   useEffect(() => {
-    if (!socket || !isConnected || payments.length === 0) return;
+    if (!socket || !isConnected || !payments || payments.length === 0) return;
 
     // Join all payment rooms for real-time updates
     const joinPromises = payments.map(payment => joinPayment(payment.reference));
@@ -145,14 +135,6 @@ export const RecentPayments = forwardRef<RecentPaymentsRef, RecentPaymentsProps>
 
     const handlePaymentUpdate = (update: any) => {
       console.log('Received payment update:', update);
-      setPayments(prev =>
-        prev.map(payment =>
-          payment.reference === update.reference
-            ? { ...payment, status: update.status === 'confirmed' ? 'completed' : update.status }
-            : payment
-        )
-      );
-
       // Show toast notification for payment status changes
       if (update.status === 'confirmed') {
         toast({
@@ -180,7 +162,7 @@ export const RecentPayments = forwardRef<RecentPaymentsRef, RecentPaymentsProps>
 
       socket.off('payment-update', handlePaymentUpdate);
     };
-  }, [socket, isConnected, payments.length, joinPayment, leavePayment, toast]);
+  }, [socket, isConnected, payments?.length, joinPayment, leavePayment, toast]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -301,7 +283,7 @@ export const RecentPayments = forwardRef<RecentPaymentsRef, RecentPaymentsProps>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {payments.length === 0 ? (
+          {!payments || payments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>No recent payments found</p>
               <p className="text-sm">Create your first payment to see activity here</p>
@@ -362,7 +344,7 @@ export const RecentPayments = forwardRef<RecentPaymentsRef, RecentPaymentsProps>
             ))
           )}
         </div>
-        {payments.length > 0 && (
+        {payments && payments.length > 0 && (
           <div className="mt-4 pt-4 border-t">
             <button className="w-full text-sm text-blue-600 hover:text-blue-800 font-medium">
               View all payments →

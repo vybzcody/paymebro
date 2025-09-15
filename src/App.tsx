@@ -33,9 +33,11 @@ function App() {
     // Cast to full type when we know properties exist
     const fullUserInfo = userInfo as AuthUserInfo;
     
+    // Use email as the primary identifier for Web3Auth users for consistency
+    // This ensures the same user gets the same ID across login sessions
+    if (fullUserInfo.email) return fullUserInfo.email;
     if (fullUserInfo.verifierId) return fullUserInfo.verifierId;
     if (fullUserInfo.aggregateVerifier) return fullUserInfo.aggregateVerifier;
-    if (fullUserInfo.email) return fullUserInfo.email;
     
     return undefined;
   };

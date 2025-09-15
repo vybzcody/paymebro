@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/card";
 import { CreditCard, DollarSign, TrendingUp, Users } from "lucide-react";
-import { useCallback } from "react";
 import { analyticsApi, type AnalyticsMetrics } from "@/lib/api/analytics";
 import { useApiCache } from "@/hooks/use-api-cache";
 
@@ -9,7 +8,7 @@ interface MetricsCardsProps {
 }
 
 export function MetricsCards({ userId }: MetricsCardsProps) {
-  const fetchMetrics = useCallback(async (): Promise<AnalyticsMetrics> => {
+  const fetchMetrics = async (): Promise<AnalyticsMetrics> => {
     if (!userId || userId === "unknown") {
       return {
         totalPayments: 0,
@@ -31,7 +30,7 @@ export function MetricsCards({ userId }: MetricsCardsProps) {
         totalUsers: 0
       };
     }
-  }, [userId]);
+  };
 
   const { data: metrics, loading: isLoading } = useApiCache(
     `metrics-${userId}`,

@@ -17,6 +17,10 @@ import { type RecentPaymentsRef } from "@/components/dashboard/recent-payments";
 import { MultiChainKeyService } from "@/lib/wallet/MultiChainKeyService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthUserInfo } from "@web3auth/auth";
+import { useDashboardRefresh } from "@/hooks/use-dashboard-refresh";
+import { analyticsApi } from "@/lib/api/analytics";
+import { paymentsApi } from "@/lib/api/payments";
+import { useApiCache } from "@/hooks/use-api-cache";
 
 export default function DashboardPage() {
   const { userInfo } = useWeb3AuthUser();
@@ -30,7 +34,9 @@ export default function DashboardPage() {
   const [registrationAttempted, setRegistrationAttempted] = useState(false);
   const registrationRef = useRef(false);
   const dashboardRef = useRef<{ refreshPayments: () => void }>(null);
-
+  const recentPaymentsRef = useRef<RecentPaymentsRef>(null);
+  const { refreshKey, triggerRefresh } = useDashboardRefresh();
+  
   // Get proper user ID from Web3Auth
   const getUserId = (): string => {
     if (!userInfo) return "unknown";
@@ -38,12 +44,37 @@ export default function DashboardPage() {
     // Cast to full type when we know properties exist
     const fullUserInfo = userInfo as AuthUserInfo;
     
+    // Use email as the primary identifier for Web3Auth users for consistency
+    // This ensures the same user gets the same ID across login sessions
+    if (fullUserInfo.email) return fullUserInfo.email;
     if (fullUserInfo.verifierId) return fullUserInfo.verifierId;
     if (fullUserInfo.aggregateVerifier) return fullUserInfo.aggregateVerifier;
-    if (fullUserInfo.email) return fullUserInfo.email;
     
     return "unknown";
   };
+  
+  // Create cache keys for dashboard components
+  const userId = getUserId();
+  const metricsCacheKey = `metrics-${userId}`;
+  const paymentsCacheKey = `recent-payments-${userId}`;
+
+  // Get cache invalidation functions for dashboard components
+  const { invalidateCache: invalidateMetricsCache } = useApiCache(
+    metricsCacheKey,
+    () => userId !== "unknown" ? analyticsApi.getMetrics(userId) : Promise.resolve({
+      totalPayments: 0,
+      totalRevenue: 0,
+      conversionRate: '0',
+      totalUsers: 0
+    }),
+    [userId]
+  );
+
+  const { invalidateCache: invalidatePaymentsCache } = useApiCache(
+    paymentsCacheKey,
+    () => userId !== "unknown" ? analyticsApi.getPaymentHistory(userId, 1, 5) : Promise.resolve([]),
+    [userId]
+  );
 
   // Generate valid ETH address from Solana address
   const generateEthAddressFallback = (solanaAddress: string) => {
@@ -114,7 +145,7 @@ export default function DashboardPage() {
     if (userInfo && getUserId() !== "unknown" && isConnected && accounts?.[0] && !registrationAttempted) {
       autoRegisterUser();
     }
-  }, [userInfo && (userInfo as AuthUserInfo).verifierId, userInfo && (userInfo as AuthUserInfo).aggregateVerifier, userInfo?.email, isConnected, accounts?.[0], registrationAttempted]);
+  }, [userInfo?.email, userInfo && (userInfo as AuthUserInfo).verifierId, userInfo && (userInfo as AuthUserInfo).aggregateVerifier, isConnected, accounts?.[0], registrationAttempted]);
 
   if (!userInfo) {
     return (
@@ -157,6 +188,22 @@ export default function DashboardPage() {
     setLocation('/wallets');
   };
 
+  const handlePaymentCreated = (payment: any) => {
+    console.log('Payment created:', payment);
+    
+    // Invalidate caches to force refresh of dashboard components
+    invalidateMetricsCache();
+    invalidatePaymentsCache();
+    
+    // Trigger refresh of dashboard components
+    triggerRefresh();
+    
+    // Also use the ref to refresh recent payments specifically
+    if (recentPaymentsRef.current) {
+      recentPaymentsRef.current.refresh();
+    }
+  };
+
   // Show analytics page if requested
   if (showAnalytics) {
     return (
@@ -181,11 +228,13 @@ export default function DashboardPage() {
 
             <TabsContent value="dashboard" className="mt-6">
               <DashboardComponent
+                key={refreshKey} // This will force re-render of dashboard components
                 user={user}
                 onCreatePayment={handleCreatePayment}
                 onViewTemplates={handleViewTemplates}
                 onViewWallets={handleViewWallets}
                 onViewAnalytics={() => setShowAnalytics(true)}
+                onPaymentCreated={handlePaymentCreated}
               />
             </TabsContent>
 
@@ -209,10 +258,7 @@ export default function DashboardPage() {
         <CreatePaymentWithAddress
           isOpen={isPaymentModalOpen}
           onClose={() => setIsPaymentModalOpen(false)}
-          onPaymentCreated={(payment) => {
-            console.log('Payment created:', payment);
-            // You can add additional logic here like showing a success modal
-          }}
+          onPaymentCreated={handlePaymentCreated}
           userId={user.web3auth_user_id}
           userWalletAddress={accounts?.[0] || undefined}
         />
